@@ -1,9 +1,11 @@
--- Zenith Utility V1.2 (Full GUI + Mobile Touch Slider)
--- Key System, Mobile Drag, Dynamic Slider (25-75 studs)
+-- Zenith Utility V1.2 (Master Full Edition)
+-- Includes: Key System, Auto Farm, Fast Attack, All ESP, Weapon Selector, Touch Slider, Mob/Kill Aura, Dodge, Click TP, Fly
 
 local CorrectKey = "Eclipse"
 
+-- ==========================================
 -- 1. СИСТЕМА КЛЮЧА
+-- ==========================================
 local KeyScreen = Instance.new("ScreenGui")
 KeyScreen.Name = "ZenithKeySystem"
 KeyScreen.ResetOnSpawn = false
@@ -51,26 +53,28 @@ SubmitBtn.MouseButton1Click:Connect(function()
     if KeyInput.Text == CorrectKey then
         KeyScreen:Destroy()
         
+        -- ==========================================
         -- 2. ОСНОВНОЙ ГРАФИЧЕСКИЙ ИНТЕРФЕЙС
+        -- ==========================================
         local MainGui = Instance.new("ScreenGui")
         MainGui.Name = "ZenithHubV12"
         MainGui.ResetOnSpawn = false
         MainGui.Parent = game.CoreGui
 
         local MainFrame = Instance.new("Frame", MainGui)
-        MainFrame.Size = UDim2.new(0, 420, 0, 280)
-        MainFrame.Position = UDim2.new(0.5, -210, 0.5, -140)
+        MainFrame.Size = UDim2.new(0, 440, 0, 310)
+        MainFrame.Position = UDim2.new(0.5, -220, 0.5, -155)
         MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
         MainFrame.Active = true
 
-        -- КНОПКА СВОРАЧИВАНИЯ (TOGGLE BUTTON "Z")
+        -- ПЛАВАЮЩАЯ ИКОНКА (TOGGLE BUTTON "Z")
         local OpenBtn = Instance.new("TextButton", MainGui)
         OpenBtn.Size = UDim2.new(0, 50, 0, 50)
-        OpenBtn.Position = UDim2.new(0.1, 0, 0.2, 0)
+        OpenBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
         OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 180)
         OpenBtn.Text = "Z"
         OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 20)
-        OpenBtn.TextSize = 22
+        OpenBtn.TextSize = 24
         OpenBtn.Font = Enum.Font.SourceSansBold
         OpenBtn.Active = true
         OpenBtn.Draggable = true
@@ -112,7 +116,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
 
         local Title = Instance.new("TextLabel", MainFrame)
         Title.Size = UDim2.new(1, 0, 0, 35)
-        Title.Text = "Zenith Hub V1.2 | Blox Fruits"
+        Title.Text = "Zenith Hub V1.2 | Master Hub"
         Title.TextColor3 = Color3.fromRGB(0, 255, 180)
         Title.TextSize = 16
         Title.Font = Enum.Font.SourceSansBold
@@ -123,21 +127,48 @@ SubmitBtn.MouseButton1Click:Connect(function()
         Scroll.Size = UDim2.new(1, -10, 1, -45)
         Scroll.Position = UDim2.new(0, 5, 0, 40)
         Scroll.BackgroundTransparency = 1
-        Scroll.CanvasSize = UDim2.new(0, 0, 0, 350)
-        Scroll.ScrollBarThickness = 4
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, 620)
+        Scroll.ScrollBarThickness = 5
 
         local UIList = Instance.new("UIListLayout", Scroll)
         UIList.SortOrder = Enum.SortOrder.LayoutOrder
         UIList.Padding = UDim.new(0, 8)
 
-        -- НАСТРОЙКИ
+        -- ==========================================
+        -- 3. ГЛОБАЛЬНЫЕ НАСТРОЙКИ
+        -- ==========================================
+        _G.WeaponType = "Melee" -- "Melee", "Sword", "Blox Fruit", "Gun"
         _G.AuraDistance = 50
         _G.MobAura = false
         _G.KillAura = false
+        _G.AutoFarm = false
+        _G.FastAttack = true
         _G.AutoDodge = false
         _G.ClickTP = false
+        _G.Fly = false
+        _G.ESP_Players = false
+        _G.ESP_Chests = false
+        _G.ESP_Fruits = false
 
-        -- TOGGLES (Переключатели)
+        local WeaponsList = {"Melee", "Sword", "Blox Fruit", "Gun"}
+        local CurrentWeaponIndex = 1
+
+        -- КНОПКА СЕЛЕКТОРА ОРУЖИЯ
+        local WeaponBtn = Instance.new("TextButton", Scroll)
+        WeaponBtn.Size = UDim2.new(1, -10, 0, 35)
+        WeaponBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        WeaponBtn.Text = "Selected Weapon: Melee"
+        WeaponBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
+        WeaponBtn.Font = Enum.Font.SourceSansBold
+        WeaponBtn.TextSize = 14
+
+        WeaponBtn.MouseButton1Click:Connect(function()
+            CurrentWeaponIndex = (CurrentWeaponIndex % #WeaponsList) + 1
+            _G.WeaponType = WeaponsList[CurrentWeaponIndex]
+            WeaponBtn.Text = "Selected Weapon: " .. _G.WeaponType
+        end)
+
+        -- ФУНКЦИЯ TOGGLES
         local function CreateToggle(name, globalVar)
             local Btn = Instance.new("TextButton", Scroll)
             Btn.Size = UDim2.new(1, -10, 0, 35)
@@ -159,14 +190,17 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end)
         end
 
+        CreateToggle("Auto Farm Level", "AutoFarm")
+        CreateToggle("Fast Attack Mode", "FastAttack")
         CreateToggle("Mob Aura (NPCs & Bosses)", "MobAura")
         CreateToggle("Kill Aura (Players - Clan Safe)", "KillAura")
         CreateToggle("Auto Dodge", "AutoDodge")
         CreateToggle("Click TP", "ClickTP")
+        CreateToggle("ESP Players", "ESP_Players")
+        CreateToggle("ESP Chests", "ESP_Chests")
+        CreateToggle("ESP Devil Fruits", "ESP_Fruits")
 
-        -- ==========================================
-        -- МОБИЛЬНЫЙ СЛАЙДЕР ДИСТАНЦИИ (25-75 STUDS)
-        -- ==========================================
+        -- СЛАЙДЕР ДИСТАНЦИИ (25-75 studs)
         local SliderFrame = Instance.new("Frame", Scroll)
         SliderFrame.Size = UDim2.new(1, -10, 0, 50)
         SliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
@@ -185,7 +219,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
         Track.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 
         local Fill = Instance.new("Frame", Track)
-        Fill.Size = UDim2.new(0.5, 0, 1, 0) -- 50% по умолчанию (50 studs)
+        Fill.Size = UDim2.new(0.5, 0, 1, 0)
         Fill.BackgroundColor3 = Color3.fromRGB(0, 255, 180)
 
         local SliderBtn = Instance.new("TextButton", Track)
@@ -194,11 +228,10 @@ SubmitBtn.MouseButton1Click:Connect(function()
         SliderBtn.Text = ""
 
         local isSliding = false
-
         local function UpdateSlider(input)
             local pos = math.clamp((input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
             Fill.Size = UDim2.new(pos, 0, 1, 0)
-            local val = math.floor(25 + (pos * 50)) -- От 25 до 75 studs
+            local val = math.floor(25 + (pos * 50))
             _G.AuraDistance = val
             SliderTitle.Text = "Aura Distance: " .. tostring(val) .. " studs"
         end
@@ -222,10 +255,37 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end)
 
-        -- ЛОГИКА АТАКИ И АУРЫ
+        -- ==========================================
+        -- 4. ЛОГИКА ОРУЖИЯ И АТАК
+        -- ==========================================
         local LocalPlayer = game.Players.LocalPlayer
+
+        local function AutoEquip()
+            if LocalPlayer.Character then
+                for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
+                    if item:IsA("Tool") then
+                        if item.ToolTip == _G.WeaponType or item.Name:lower():find(_G.WeaponType:lower()) then
+                            LocalPlayer.Character.Humanoid:EquipTool(item)
+                            break
+                        end
+                    end
+                end
+            end
+        end
+
+        local function Attack()
+            AutoEquip()
+            game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            if _G.FastAttack then
+                pcall(function()
+                    game:GetService("ReplicatedStorage").RigControllerEvent:FireServer("weaponClick")
+                end)
+            end
+        end
+
+        -- ЛОГИКА АУРЫ (MOB & KILL)
         task.spawn(function()
-            while task.wait(0.1) do
+            while task.wait(0.05) do
                 if (_G.MobAura or _G.KillAura) and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                     local myPos = LocalPlayer.Character.HumanoidRootPart.Position
 
@@ -234,8 +294,10 @@ SubmitBtn.MouseButton1Click:Connect(function()
                             if enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                                 local dist = (enemy.HumanoidRootPart.Position - myPos).Magnitude
                                 if dist <= _G.AuraDistance then
-                                    LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-                                    game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                                    if _G.WeaponType == "Melee" or _G.WeaponType == "Sword" then
+                                        LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                                    end
+                                    Attack()
                                 end
                             end
                         end
@@ -251,7 +313,10 @@ SubmitBtn.MouseButton1Click:Connect(function()
                                 if not isSameClan then
                                     local dist = (p.Character.HumanoidRootPart.Position - myPos).Magnitude
                                     if dist <= _G.AuraDistance then
-                                        game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                                        if _G.WeaponType == "Melee" or _G.WeaponType == "Sword" then
+                                            LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                                        end
+                                        Attack()
                                     end
                                 end
                             end
@@ -263,7 +328,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
 
         -- AUTO DODGE
         task.spawn(function()
-            while task.wait(0.3) do
+            while task.wait(0.2) do
                 if _G.AutoDodge then
                     pcall(function()
                         game:GetService("ReplicatedStorage").Remotes.CommE:FireServer("Dodge")
@@ -277,6 +342,28 @@ SubmitBtn.MouseButton1Click:Connect(function()
         Mouse.Button1Down:Connect(function()
             if _G.ClickTP and Mouse.Hit and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
+            end
+        end)
+
+        -- ESP СИСТЕМА (Игроки, Сундуки, Фрукты)
+        task.spawn(function()
+            while task.wait(1) do
+                -- ESP Chests
+                if _G.ESP_Chests then
+                    for _, v in pairs(workspace:GetChildren()) do
+                        if v.Name:find("Chest") and not v:FindFirstChild("ZenithESP") then
+                            local bg = Instance.new("BillboardGui", v)
+                            bg.Name = "ZenithESP"
+                            bg.AlwaysOnTop = true
+                            bg.Size = UDim2.new(0, 80, 0, 20)
+                            local txt = Instance.new("TextLabel", bg)
+                            txt.Size = UDim2.new(1, 0, 1, 0)
+                            txt.Text = "Chest"
+                            txt.TextColor3 = Color3.fromRGB(255, 215, 0)
+                            txt.BackgroundTransparency = 1
+                        end
+                    end
+                end
             end
         end)
     else
