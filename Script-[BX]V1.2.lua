@@ -1,11 +1,9 @@
--- Zenith Utility V1.2 (Master Full Edition)
--- Includes: Key System, Auto Farm, Fast Attack, All ESP, Weapon Selector, Touch Slider, Mob/Kill Aura, Dodge, Click TP, Fly
+-- Zenith Utility V1.2 (Master Complete Edition)
+-- Includes: Silent Fast Attack (0 CD), Fly Engine, Island Teleports, Mobile Slider, Key System
 
 local CorrectKey = "Eclipse"
 
--- ==========================================
 -- 1. СИСТЕМА КЛЮЧА
--- ==========================================
 local KeyScreen = Instance.new("ScreenGui")
 KeyScreen.Name = "ZenithKeySystem"
 KeyScreen.ResetOnSpawn = false
@@ -53,21 +51,19 @@ SubmitBtn.MouseButton1Click:Connect(function()
     if KeyInput.Text == CorrectKey then
         KeyScreen:Destroy()
         
-        -- ==========================================
-        -- 2. ОСНОВНОЙ ГРАФИЧЕСКИЙ ИНТЕРФЕЙС
-        -- ==========================================
+        -- 2. ОСНОВНОЙ GUI
         local MainGui = Instance.new("ScreenGui")
         MainGui.Name = "ZenithHubV12"
         MainGui.ResetOnSpawn = false
         MainGui.Parent = game.CoreGui
 
         local MainFrame = Instance.new("Frame", MainGui)
-        MainFrame.Size = UDim2.new(0, 440, 0, 310)
-        MainFrame.Position = UDim2.new(0.5, -220, 0.5, -155)
+        MainFrame.Size = UDim2.new(0, 440, 0, 320)
+        MainFrame.Position = UDim2.new(0.5, -220, 0.5, -160)
         MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
         MainFrame.Active = true
 
-        -- ПЛАВАЮЩАЯ ИКОНКА (TOGGLE BUTTON "Z")
+        -- ПЛАВАЮЩАЯ ИКОНКА (Z)
         local OpenBtn = Instance.new("TextButton", MainGui)
         OpenBtn.Size = UDim2.new(0, 50, 0, 50)
         OpenBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
@@ -86,7 +82,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
             MainFrame.Visible = not MainFrame.Visible
         end)
 
-        -- МОБИЛЬНЫЙ ДРАГ ОКНА
+        -- МОБИЛЬНЫЙ ДРАГ
         local UserInputService = game:GetService("UserInputService")
         local dragging, dragInput, dragStart, startPos
 
@@ -116,28 +112,25 @@ SubmitBtn.MouseButton1Click:Connect(function()
 
         local Title = Instance.new("TextLabel", MainFrame)
         Title.Size = UDim2.new(1, 0, 0, 35)
-        Title.Text = "Zenith Hub V1.2 | Master Hub"
+        Title.Text = "Zenith Hub V1.2 | Full Master Edition"
         Title.TextColor3 = Color3.fromRGB(0, 255, 180)
         Title.TextSize = 16
         Title.Font = Enum.Font.SourceSansBold
         Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 
-        -- СПИСОК ФУНКЦИЙ
         local Scroll = Instance.new("ScrollingFrame", MainFrame)
         Scroll.Size = UDim2.new(1, -10, 1, -45)
         Scroll.Position = UDim2.new(0, 5, 0, 40)
         Scroll.BackgroundTransparency = 1
-        Scroll.CanvasSize = UDim2.new(0, 0, 0, 620)
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, 800)
         Scroll.ScrollBarThickness = 5
 
         local UIList = Instance.new("UIListLayout", Scroll)
         UIList.SortOrder = Enum.SortOrder.LayoutOrder
         UIList.Padding = UDim.new(0, 8)
 
-        -- ==========================================
-        -- 3. ГЛОБАЛЬНЫЕ НАСТРОЙКИ
-        -- ==========================================
-        _G.WeaponType = "Melee" -- "Melee", "Sword", "Blox Fruit", "Gun"
+        -- 3. ПЕРЕМЕННЫЕ
+        _G.WeaponType = "Melee"
         _G.AuraDistance = 50
         _G.MobAura = false
         _G.KillAura = false
@@ -146,6 +139,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
         _G.AutoDodge = false
         _G.ClickTP = false
         _G.Fly = false
+        _G.FlySpeed = 50
         _G.ESP_Players = false
         _G.ESP_Chests = false
         _G.ESP_Fruits = false
@@ -153,7 +147,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
         local WeaponsList = {"Melee", "Sword", "Blox Fruit", "Gun"}
         local CurrentWeaponIndex = 1
 
-        -- КНОПКА СЕЛЕКТОРА ОРУЖИЯ
         local WeaponBtn = Instance.new("TextButton", Scroll)
         WeaponBtn.Size = UDim2.new(1, -10, 0, 35)
         WeaponBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
@@ -168,7 +161,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
             WeaponBtn.Text = "Selected Weapon: " .. _G.WeaponType
         end)
 
-        -- ФУНКЦИЯ TOGGLES
         local function CreateToggle(name, globalVar)
             local Btn = Instance.new("TextButton", Scroll)
             Btn.Size = UDim2.new(1, -10, 0, 35)
@@ -194,13 +186,14 @@ SubmitBtn.MouseButton1Click:Connect(function()
         CreateToggle("Fast Attack Mode", "FastAttack")
         CreateToggle("Mob Aura (NPCs & Bosses)", "MobAura")
         CreateToggle("Kill Aura (Players - Clan Safe)", "KillAura")
+        CreateToggle("Fly Hack (Control Movement)", "Fly")
         CreateToggle("Auto Dodge", "AutoDodge")
         CreateToggle("Click TP", "ClickTP")
         CreateToggle("ESP Players", "ESP_Players")
         CreateToggle("ESP Chests", "ESP_Chests")
         CreateToggle("ESP Devil Fruits", "ESP_Fruits")
 
-        -- СЛАЙДЕР ДИСТАНЦИИ (25-75 studs)
+        -- СЛАЙДЕР ДИСТАНЦИИ
         local SliderFrame = Instance.new("Frame", Scroll)
         SliderFrame.Size = UDim2.new(1, -10, 0, 50)
         SliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
@@ -256,36 +249,83 @@ SubmitBtn.MouseButton1Click:Connect(function()
         end)
 
         -- ==========================================
-        -- 4. ЛОГИКА ОРУЖИЯ И АТАК
+        -- 4. ТЕЛЕПОРТЫ ПО ОСТРОВАМ
+        -- ==========================================
+        local TPHeader = Instance.new("TextLabel", Scroll)
+        TPHeader.Size = UDim2.new(1, -10, 0, 25)
+        TPHeader.Text = "-- Island Teleports --"
+        TPHeader.TextColor3 = Color3.fromRGB(0, 255, 180)
+        TPHeader.Font = Enum.Font.SourceSansBold
+        TPHeader.BackgroundTransparency = 1
+
+        local Islands = {
+            ["Starter Island"] = Vector3.new(1095, 16, 1420),
+            ["Marine Fortress"] = Vector3.new(-5042, 73, 4323),
+            ["Prison"] = Vector3.new(4850, 5, 730),
+            ["Jungle"] = Vector3.new(-1612, 36, 148),
+            ["Cafe (Sea 2)"] = Vector3.new(-380, 73, 298),
+            ["Mansion (Sea 3)"] = Vector3.new(-12460, 375, -7540)
+        }
+
+        for islandName, coords in pairs(Islands) do
+            local TpBtn = Instance.new("TextButton", Scroll)
+            TpBtn.Size = UDim2.new(1, -10, 0, 30)
+            TpBtn.BackgroundColor3 = Color3.fromRGB(40, 50, 60)
+            TpBtn.Text = "TP To: " .. islandName
+            TpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TpBtn.Font = Enum.Font.SourceSans
+
+            TpBtn.MouseButton1Click:Connect(function()
+                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(coords)
+                end
+            end)
+        end
+
+        -- ==========================================
+        -- 5. ТИХАЯ АТАКА И ДВИЖКИ
         -- ==========================================
         local LocalPlayer = game.Players.LocalPlayer
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
         local function AutoEquip()
             if LocalPlayer.Character then
-                for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
-                    if item:IsA("Tool") then
-                        if item.ToolTip == _G.WeaponType or item.Name:lower():find(_G.WeaponType:lower()) then
-                            LocalPlayer.Character.Humanoid:EquipTool(item)
-                            break
+                local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                if not tool then
+                    for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
+                        if item:IsA("Tool") then
+                            if item.ToolTip == _G.WeaponType or item.Name:lower():find(_G.WeaponType:lower()) or _G.WeaponType == "Melee" then
+                                LocalPlayer.Character.Humanoid:EquipTool(item)
+                                break
+                            end
                         end
                     end
                 end
             end
         end
 
-        local function Attack()
+        -- Тихая быстрая атака без КД
+        local function ExecuteSilentAttack()
             AutoEquip()
-            game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-            if _G.FastAttack then
-                pcall(function()
-                    game:GetService("ReplicatedStorage").RigControllerEvent:FireServer("weaponClick")
-                end)
+            local char = LocalPlayer.Character
+            if char then
+                local tool = char:FindFirstChildOfClass("Tool")
+                if tool then
+                    tool:Activate()
+                    pcall(function()
+                        local net = ReplicatedStorage:FindFirstChild("Modules") and ReplicatedStorage.Modules:FindFirstChild("Net")
+                        if net then
+                            net:FindFirstChild("RE/RegisterAttack"):FireServer()
+                        end
+                    end)
+                end
             end
         end
 
-        -- ЛОГИКА АУРЫ (MOB & KILL)
+        -- Моб & Килл Аура (КД ~0.01 сек)
         task.spawn(function()
-            while task.wait(0.05) do
+            while true do
+                task.wait(0.01)
                 if (_G.MobAura or _G.KillAura) and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                     local myPos = LocalPlayer.Character.HumanoidRootPart.Position
 
@@ -294,10 +334,8 @@ SubmitBtn.MouseButton1Click:Connect(function()
                             if enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                                 local dist = (enemy.HumanoidRootPart.Position - myPos).Magnitude
                                 if dist <= _G.AuraDistance then
-                                    if _G.WeaponType == "Melee" or _G.WeaponType == "Sword" then
-                                        LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-                                    end
-                                    Attack()
+                                    LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                                    ExecuteSilentAttack()
                                 end
                             end
                         end
@@ -313,10 +351,8 @@ SubmitBtn.MouseButton1Click:Connect(function()
                                 if not isSameClan then
                                     local dist = (p.Character.HumanoidRootPart.Position - myPos).Magnitude
                                     if dist <= _G.AuraDistance then
-                                        if _G.WeaponType == "Melee" or _G.WeaponType == "Sword" then
-                                            LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-                                        end
-                                        Attack()
+                                        LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                                        ExecuteSilentAttack()
                                     end
                                 end
                             end
@@ -326,12 +362,34 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end)
 
+        -- FLY HACK ENGINE
+        task.spawn(function()
+            local bv, bg
+            while true do
+                task.wait(0.05)
+                if _G.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = LocalPlayer.Character.HumanoidRootPart
+                    if not bv then
+                        bv = Instance.new("BodyVelocity", hrp)
+                        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                        bg = Instance.new("BodyGyro", hrp)
+                        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+                    end
+                    bg.CFrame = workspace.CurrentCamera.CFrame
+                    bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * _G.FlySpeed
+                else
+                    if bv then bv:Destroy() bv = nil end
+                    if bg then bg:Destroy() bg = nil end
+                end
+            end
+        end)
+
         -- AUTO DODGE
         task.spawn(function()
-            while task.wait(0.2) do
+            while task.wait(0.1) do
                 if _G.AutoDodge then
                     pcall(function()
-                        game:GetService("ReplicatedStorage").Remotes.CommE:FireServer("Dodge")
+                        ReplicatedStorage.Remotes.CommE:FireServer("Dodge")
                     end)
                 end
             end
@@ -345,22 +403,49 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end)
 
-        -- ESP СИСТЕМА (Игроки, Сундуки, Фрукты)
+        -- ESP ENGINE
         task.spawn(function()
-            while task.wait(1) do
-                -- ESP Chests
-                if _G.ESP_Chests then
-                    for _, v in pairs(workspace:GetChildren()) do
-                        if v.Name:find("Chest") and not v:FindFirstChild("ZenithESP") then
-                            local bg = Instance.new("BillboardGui", v)
-                            bg.Name = "ZenithESP"
-                            bg.AlwaysOnTop = true
-                            bg.Size = UDim2.new(0, 80, 0, 20)
-                            local txt = Instance.new("TextLabel", bg)
-                            txt.Size = UDim2.new(1, 0, 1, 0)
-                            txt.Text = "Chest"
-                            txt.TextColor3 = Color3.fromRGB(255, 215, 0)
-                            txt.BackgroundTransparency = 1
+            while task.wait(0.5) do
+                for _, p in pairs(game.Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character then
+                        local hl = p.Character:FindFirstChild("ZenithPlayerESP")
+                        if _G.ESP_Players then
+                            if not hl then
+                                hl = Instance.new("Highlight")
+                                hl.Name = "ZenithPlayerESP"
+                                hl.FillColor = Color3.fromRGB(255, 50, 50)
+                                hl.Parent = p.Character
+                            end
+                        else
+                            if hl then hl:Destroy() end
+                        end
+                    end
+                end
+
+                for _, obj in pairs(workspace:GetChildren()) do
+                    if obj.Name:find("Chest") then
+                        local hl = obj:FindFirstChild("ZenithChestESP")
+                        if _G.ESP_Chests then
+                            if not hl then
+                                hl = Instance.new("Highlight")
+                                hl.Name = "ZenithChestESP"
+                                hl.FillColor = Color3.fromRGB(255, 215, 0)
+                                hl.Parent = obj
+                            end
+                        else
+                            if hl then hl:Destroy() end
+                        end
+                    elseif obj.Name:find("Fruit") or obj:FindFirstChild("Handle") then
+                        local hl = obj:FindFirstChild("ZenithFruitESP")
+                        if _G.ESP_Fruits then
+                            if not hl then
+                                hl = Instance.new("Highlight")
+                                hl.Name = "ZenithFruitESP"
+                                hl.FillColor = Color3.fromRGB(0, 255, 100)
+                                hl.Parent = obj
+                            end
+                        else
+                            if hl then hl:Destroy() end
                         end
                     end
                 end
