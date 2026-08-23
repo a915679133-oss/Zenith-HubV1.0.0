@@ -1,9 +1,9 @@
--- Zenith Utility V1.2 (Clean & Fixed Edition)
--- Key System, CFrame Fly, Working Island Teleports, Silent Attack
+-- Zenith Hub V1.2 (Original TP Mechanics Restored)
+-- Key System, Original CFrame Teleports, Fixed Auto-Farm, Fast Attack, ESP
 
 local CorrectKey = "Eclipse"
 
--- 1. СИСТЕМА КЛЮЧА
+-- 1. KEY SYSTEM
 local KeyScreen = Instance.new("ScreenGui")
 KeyScreen.Name = "ZenithKeySystem"
 KeyScreen.ResetOnSpawn = false
@@ -51,19 +51,18 @@ SubmitBtn.MouseButton1Click:Connect(function()
     if KeyInput.Text == CorrectKey then
         KeyScreen:Destroy()
         
-        -- 2. ОСНОВНОЙ GUI
+        -- 2. MAIN GUI
         local MainGui = Instance.new("ScreenGui")
         MainGui.Name = "ZenithHubV12"
         MainGui.ResetOnSpawn = false
         MainGui.Parent = game.CoreGui
 
         local MainFrame = Instance.new("Frame", MainGui)
-        MainFrame.Size = UDim2.new(0, 440, 0, 320)
-        MainFrame.Position = UDim2.new(0.5, -220, 0.5, -160)
+        MainFrame.Size = UDim2.new(0, 460, 0, 340)
+        MainFrame.Position = UDim2.new(0.5, -230, 0.5, -170)
         MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
         MainFrame.Active = true
 
-        -- ПЛАВАЮЩАЯ ИКОНКА (Z)
         local OpenBtn = Instance.new("TextButton", MainGui)
         OpenBtn.Size = UDim2.new(0, 50, 0, 50)
         OpenBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
@@ -82,7 +81,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
             MainFrame.Visible = not MainFrame.Visible
         end)
 
-        -- МОБИЛЬНЫЙ ДРАГ
         local UserInputService = game:GetService("UserInputService")
         local dragging, dragInput, dragStart, startPos
 
@@ -112,9 +110,9 @@ SubmitBtn.MouseButton1Click:Connect(function()
 
         local Title = Instance.new("TextLabel", MainFrame)
         Title.Size = UDim2.new(1, 0, 0, 35)
-        Title.Text = "Zenith Hub V1.2 | Fixed TP Edition"
+        Title.Text = "Zenith Hub V1.2 | V1 Teleports Restored"
         Title.TextColor3 = Color3.fromRGB(0, 255, 180)
-        Title.TextSize = 16
+        Title.TextSize = 15
         Title.Font = Enum.Font.SourceSansBold
         Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 
@@ -122,23 +120,23 @@ SubmitBtn.MouseButton1Click:Connect(function()
         Scroll.Size = UDim2.new(1, -10, 1, -45)
         Scroll.Position = UDim2.new(0, 5, 0, 40)
         Scroll.BackgroundTransparency = 1
-        Scroll.CanvasSize = UDim2.new(0, 0, 0, 900)
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, 950)
         Scroll.ScrollBarThickness = 5
 
         local UIList = Instance.new("UIListLayout", Scroll)
         UIList.SortOrder = Enum.SortOrder.LayoutOrder
         UIList.Padding = UDim.new(0, 8)
 
-        -- 3. ПЕРЕМЕННЫЕ
+        -- GLOBAL SETTINGS
         _G.WeaponType = "Melee"
         _G.AuraDistance = 50
-        _G.MobAura = false
-        _G.KillAura = false
         _G.AutoFarm = false
         _G.FastAttack = true
-        _G.ClickTP = false
+        _G.MobAura = false
+        _G.KillAura = false
         _G.Fly = false
         _G.FlySpeed = 2
+        _G.ClickTP = false
         _G.ESP_Players = false
         _G.ESP_Chests = false
         _G.ESP_Fruits = false
@@ -181,17 +179,17 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end)
         end
 
-        CreateToggle("Auto Farm Level", "AutoFarm")
-        CreateToggle("Fast Attack Mode", "FastAttack")
-        CreateToggle("Mob Aura (NPCs & Bosses)", "MobAura")
-        CreateToggle("Kill Aura (Players - Clan Safe)", "KillAura")
+        CreateToggle("Auto Farm Level (Auto Quest)", "AutoFarm")
+        CreateToggle("Fast Attack Engine", "FastAttack")
+        CreateToggle("Mob Aura", "MobAura")
+        CreateToggle("Kill Aura (PvP Safe)", "KillAura")
         CreateToggle("CFrame Fly Hack", "Fly")
         CreateToggle("Click TP", "ClickTP")
         CreateToggle("ESP Players", "ESP_Players")
         CreateToggle("ESP Chests", "ESP_Chests")
         CreateToggle("ESP Devil Fruits", "ESP_Fruits")
 
-        -- СЛАЙДЕР ДИСТАНЦИИ
+        -- SLIDER
         local SliderFrame = Instance.new("Frame", Scroll)
         SliderFrame.Size = UDim2.new(1, -10, 0, 50)
         SliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
@@ -246,7 +244,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end)
 
-        -- 4. ТЕЛЕПОРТЫ ПО ОСТРОВАМ (ИСПРАВЛЕНО)
+        -- 4. ТЕЛЕПОРТЫ ПО ОСТРОВАМ (ОРГАНИЧЕСКИЙ CFRAME ИЗ V1)
         local TPHeader = Instance.new("TextLabel", Scroll)
         TPHeader.Size = UDim2.new(1, -10, 0, 25)
         TPHeader.Text = "-- Island Teleports --"
@@ -256,9 +254,13 @@ SubmitBtn.MouseButton1Click:Connect(function()
 
         local Islands = {
             {"Starter Island", Vector3.new(1095, 16, 1420)},
+            {"Jungle", Vector3.new(-1612, 36, 148)},
+            {"Pirate Village", Vector3.new(-1145, 4, 3830)},
+            {"Desert", Vector3.new(895, 6, 4390)},
+            {"Middle Town", Vector3.new(-690, 15, 1580)},
+            {"Frozen Village", Vector3.new(1150, 26, -1425)},
             {"Marine Fortress", Vector3.new(-5042, 73, 4323)},
             {"Prison", Vector3.new(4850, 5, 730)},
-            {"Jungle", Vector3.new(-1612, 36, 148)},
             {"Cafe (Sea 2)", Vector3.new(-380, 73, 298)},
             {"Mansion (Sea 3)", Vector3.new(-12460, 375, -7540)}
         }
@@ -283,7 +285,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end)
         end
 
-        -- 5. ДВИЖКИ
+        -- GAME LOGIC & ENGINE
         local LocalPlayer = game.Players.LocalPlayer
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -303,37 +305,84 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end
 
-        local function ExecuteSilentAttack()
+        local function Attack()
             AutoEquip()
-            local char = LocalPlayer.Character
-            if char then
-                local tool = char:FindFirstChildOfClass("Tool")
+            if LocalPlayer.Character then
+                local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
                 if tool then
                     tool:Activate()
                     pcall(function()
                         local net = ReplicatedStorage:FindFirstChild("Modules") and ReplicatedStorage.Modules:FindFirstChild("Net")
-                        if net then
-                            net:FindFirstChild("RE/RegisterAttack"):FireServer()
+                        if net and net:FindFirstChild("RE/RegisterAttack") then
+                            net["RE/RegisterAttack"]:FireServer()
                         end
                     end)
                 end
             end
         end
 
-        -- FLY ENGINE
+        -- QUEST DATA ASSIGNMENT
+        local function GetQuestData()
+            local level = 1
+            pcall(function() level = LocalPlayer.Data.Level.Value end)
+            
+            if level >= 1 and level < 10 then
+                return "BanditQuest1", 1, "Bandit", CFrame.new(1060, 16, 1548), CFrame.new(1145, 17, 1634)
+            elseif level >= 10 and level < 15 then
+                return "JungleQuest", 1, "Monkey", CFrame.new(-1600, 37, 153), CFrame.new(-1620, 37, 140)
+            elseif level >= 15 and level < 30 then
+                return "JungleQuest", 2, "Gorilla", CFrame.new(-1600, 37, 153), CFrame.new(-1240, 6, -490)
+            elseif level >= 30 and level < 40 then
+                return "PirateQuest", 1, "Pirate", CFrame.new(-1140, 4, 3828), CFrame.new(-1215, 4, 3915)
+            elseif level >= 40 and level < 60 then
+                return "PirateQuest", 2, "Brute", CFrame.new(-1140, 4, 3828), CFrame.new(-1145, 14, 4300)
+            elseif level >= 60 and level < 90 then
+                return "DesertQuest", 1, "Desert Bandit", CFrame.new(896, 6, 4390), CFrame.new(930, 6, 4480)
+            elseif level >= 90 and level < 100 then
+                return "DesertQuest", 2, "Desert Officer", CFrame.new(896, 6, 4390), CFrame.new(1580, 6, 4370)
+            elseif level >= 100 and level < 120 then
+                return "SnowQuest", 1, "Snow Bandit", CFrame.new(1385, 87, -1298), CFrame.new(1280, 105, -1430)
+            else
+                return "BanditQuest1", 1, "Bandit", CFrame.new(1060, 16, 1548), CFrame.new(1145, 17, 1634)
+            end
+        end
+
+        -- AUTO FARM ENGINE
         task.spawn(function()
             while true do
                 task.wait(0.01)
-                if _G.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = LocalPlayer.Character.HumanoidRootPart
-                    local cam = workspace.CurrentCamera
-                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + cam.CFrame.LookVector) * CFrame.new(0, 0, -_G.FlySpeed)
-                    hrp.Velocity = Vector3.new(0, 0, 0)
+                if _G.AutoFarm and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    pcall(function()
+                        local questTitle, questId, mobName, questCFrame, mobCFrame = GetQuestData()
+                        local questFrame = LocalPlayer.PlayerGui.Main:FindFirstChild("Quest")
+                        local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+                        
+                        if not (questFrame and questFrame.Visible) then
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = questCFrame
+                            task.wait(0.5)
+                            CommF:InvokeServer("StartQuest", questTitle, questId)
+                        else
+                            local enemyFound = false
+                            if workspace:FindFirstChild("Enemies") then
+                                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                                    if enemy.Name == mobName and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                                        enemyFound = true
+                                        LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                                        if _G.FastAttack then Attack() end
+                                        break
+                                    end
+                                end
+                            end
+                            if not enemyFound then
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = mobCFrame
+                            end
+                        end
+                    end)
                 end
             end
         end)
 
-        -- Моб & Килл Аура
+        -- COMBAT AURAS ENGINE
         task.spawn(function()
             while true do
                 task.wait(0.01)
@@ -346,7 +395,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
                                 local dist = (enemy.HumanoidRootPart.Position - myPos).Magnitude
                                 if dist <= _G.AuraDistance then
                                     LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-                                    ExecuteSilentAttack()
+                                    if _G.FastAttack then Attack() end
                                 end
                             end
                         end
@@ -363,7 +412,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
                                     local dist = (p.Character.HumanoidRootPart.Position - myPos).Magnitude
                                     if dist <= _G.AuraDistance then
                                         LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-                                        ExecuteSilentAttack()
+                                        if _G.FastAttack then Attack() end
                                     end
                                 end
                             end
@@ -373,64 +422,22 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end)
 
-        -- CLICK TP
+        -- FLY HACK ENGINE
+        task.spawn(function()
+            while true do
+                task.wait(0.01)
+                if _G.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = LocalPlayer.Character.HumanoidRootPart
+                    local cam = workspace.CurrentCamera
+                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + cam.CFrame.LookVector) * CFrame.new(0, 0, -_G.FlySpeed)
+                    hrp.Velocity = Vector3.new(0, 0, 0)
+                end
+            end
+        end)
+
+        -- CLICK TP ENGINE
         local Mouse = LocalPlayer:GetMouse()
         Mouse.Button1Down:Connect(function()
             if _G.ClickTP and Mouse.Hit and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
-            end
-        end)
-
-        -- ESP ENGINE
-        task.spawn(function()
-            while task.wait(0.5) do
-                for _, p in pairs(game.Players:GetPlayers()) do
-                    if p ~= LocalPlayer and p.Character then
-                        local hl = p.Character:FindFirstChild("ZenithPlayerESP")
-                        if _G.ESP_Players then
-                            if not hl then
-                                hl = Instance.new("Highlight")
-                                hl.Name = "ZenithPlayerESP"
-                                hl.FillColor = Color3.fromRGB(255, 50, 50)
-                                hl.Parent = p.Character
-                            end
-                        else
-                            if hl then hl:Destroy() end
-                        end
-                    end
-                end
-
-                for _, obj in pairs(workspace:GetChildren()) do
-                    if obj.Name:find("Chest") then
-                        local hl = obj:FindFirstChild("ZenithChestESP")
-                        if _G.ESP_Chests then
-                            if not hl then
-                                hl = Instance.new("Highlight")
-                                hl.Name = "ZenithChestESP"
-                                hl.FillColor = Color3.fromRGB(255, 215, 0)
-                                hl.Parent = obj
-                            end
-                        else
-                            if hl then hl:Destroy() end
-                        end
-                    elseif obj.Name:find("Fruit") or obj:FindFirstChild("Handle") then
-                        local hl = obj:FindFirstChild("ZenithFruitESP")
-                        if _G.ESP_Fruits then
-                            if not hl then
-                                hl = Instance.new("Highlight")
-                                hl.Name = "ZenithFruitESP"
-                                hl.FillColor = Color3.fromRGB(0, 255, 100)
-                                hl.Parent = obj
-                            end
-                        else
-                            if hl then hl:Destroy() end
-                        end
-                    end
-                end
-            end
-        end)
-    else
-        KeyInput.Text = ""
-        KeyInput.PlaceholderText = "Wrong Key!"
-    end
-end)
+            e
