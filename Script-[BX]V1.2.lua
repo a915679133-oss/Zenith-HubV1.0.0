@@ -1,5 +1,5 @@
--- Zenith Utility V1.2 (Master Complete Edition)
--- Includes: Silent Fast Attack (0 CD), Fly Engine, Island Teleports, Mobile Slider, Key System
+-- Zenith Utility V1.2 (Fixed Fly & Infinite Instinct Dodge)
+-- Key System, CFrame Fly, Infinite Auto-Dodge, Silent Attack, Island Teleports
 
 local CorrectKey = "Eclipse"
 
@@ -112,7 +112,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
 
         local Title = Instance.new("TextLabel", MainFrame)
         Title.Size = UDim2.new(1, 0, 0, 35)
-        Title.Text = "Zenith Hub V1.2 | Full Master Edition"
+        Title.Text = "Zenith Hub V1.2 | Fixed Fly & Instinct"
         Title.TextColor3 = Color3.fromRGB(0, 255, 180)
         Title.TextSize = 16
         Title.Font = Enum.Font.SourceSansBold
@@ -139,7 +139,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
         _G.AutoDodge = false
         _G.ClickTP = false
         _G.Fly = false
-        _G.FlySpeed = 50
+        _G.FlySpeed = 2
         _G.ESP_Players = false
         _G.ESP_Chests = false
         _G.ESP_Fruits = false
@@ -186,8 +186,8 @@ SubmitBtn.MouseButton1Click:Connect(function()
         CreateToggle("Fast Attack Mode", "FastAttack")
         CreateToggle("Mob Aura (NPCs & Bosses)", "MobAura")
         CreateToggle("Kill Aura (Players - Clan Safe)", "KillAura")
-        CreateToggle("Fly Hack (Control Movement)", "Fly")
-        CreateToggle("Auto Dodge", "AutoDodge")
+        CreateToggle("CFrame Fly Hack", "Fly")
+        CreateToggle("Infinite Auto Dodge (Instinct)", "AutoDodge")
         CreateToggle("Click TP", "ClickTP")
         CreateToggle("ESP Players", "ESP_Players")
         CreateToggle("ESP Chests", "ESP_Chests")
@@ -248,9 +248,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end)
 
-        -- ==========================================
-        -- 4. ТЕЛЕПОРТЫ ПО ОСТРОВАМ
-        -- ==========================================
+        -- 4. ТЕЛЕПОРТЫ
         local TPHeader = Instance.new("TextLabel", Scroll)
         TPHeader.Size = UDim2.new(1, -10, 0, 25)
         TPHeader.Text = "-- Island Teleports --"
@@ -282,9 +280,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end)
         end
 
-        -- ==========================================
-        -- 5. ТИХАЯ АТАКА И ДВИЖКИ
-        -- ==========================================
+        -- 5. ДВИЖКИ (FLY & INFINITE INSTINCT)
         local LocalPlayer = game.Players.LocalPlayer
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -304,7 +300,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end
 
-        -- Тихая быстрая атака без КД
         local function ExecuteSilentAttack()
             AutoEquip()
             local char = LocalPlayer.Character
@@ -322,7 +317,35 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end
 
-        -- Моб & Килл Аура (КД ~0.01 сек)
+        -- CFRAME FLY ENGINE (Рабочий полет)
+        task.spawn(function()
+            while true do
+                task.wait(0.01)
+                if _G.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = LocalPlayer.Character.HumanoidRootPart
+                    local cam = workspace.CurrentCamera
+                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + cam.CFrame.LookVector) * CFrame.new(0, 0, -_G.FlySpeed)
+                    hrp.Velocity = Vector3.new(0, 0, 0)
+                end
+            end
+        end)
+
+        -- INFINITE AUTO DODGE (Инстинкт)
+        task.spawn(function()
+            while true do
+                task.wait(0.05)
+                if _G.AutoDodge then
+                    pcall(function()
+                        -- Перезапуск инстинкта уклонения
+                        ReplicatedStorage.Remotes.CommE:FireServer("Dodge")
+                        ReplicatedStorage.Remotes.CommF_:InvokeServer("EnableBuso")
+                        ReplicatedStorage.Remotes.CommF_:InvokeServer("KenTalk", "Buy")
+                    end)
+                end
+            end
+        end)
+
+        -- Моб & Килл Аура
         task.spawn(function()
             while true do
                 task.wait(0.01)
@@ -358,39 +381,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
                             end
                         end
                     end
-                end
-            end
-        end)
-
-        -- FLY HACK ENGINE
-        task.spawn(function()
-            local bv, bg
-            while true do
-                task.wait(0.05)
-                if _G.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = LocalPlayer.Character.HumanoidRootPart
-                    if not bv then
-                        bv = Instance.new("BodyVelocity", hrp)
-                        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-                        bg = Instance.new("BodyGyro", hrp)
-                        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-                    end
-                    bg.CFrame = workspace.CurrentCamera.CFrame
-                    bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * _G.FlySpeed
-                else
-                    if bv then bv:Destroy() bv = nil end
-                    if bg then bg:Destroy() bg = nil end
-                end
-            end
-        end)
-
-        -- AUTO DODGE
-        task.spawn(function()
-            while task.wait(0.1) do
-                if _G.AutoDodge then
-                    pcall(function()
-                        ReplicatedStorage.Remotes.CommE:FireServer("Dodge")
-                    end)
                 end
             end
         end)
