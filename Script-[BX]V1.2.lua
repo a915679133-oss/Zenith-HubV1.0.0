@@ -1,5 +1,5 @@
--- Zenith Utility V1.2 (Fixed Fly & Infinite Instinct Dodge)
--- Key System, CFrame Fly, Infinite Auto-Dodge, Silent Attack, Island Teleports
+-- Zenith Utility V1.2 (Clean & Fixed Edition)
+-- Key System, CFrame Fly, Working Island Teleports, Silent Attack
 
 local CorrectKey = "Eclipse"
 
@@ -112,7 +112,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
 
         local Title = Instance.new("TextLabel", MainFrame)
         Title.Size = UDim2.new(1, 0, 0, 35)
-        Title.Text = "Zenith Hub V1.2 | Fixed Fly & Instinct"
+        Title.Text = "Zenith Hub V1.2 | Fixed TP Edition"
         Title.TextColor3 = Color3.fromRGB(0, 255, 180)
         Title.TextSize = 16
         Title.Font = Enum.Font.SourceSansBold
@@ -122,7 +122,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
         Scroll.Size = UDim2.new(1, -10, 1, -45)
         Scroll.Position = UDim2.new(0, 5, 0, 40)
         Scroll.BackgroundTransparency = 1
-        Scroll.CanvasSize = UDim2.new(0, 0, 0, 800)
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, 900)
         Scroll.ScrollBarThickness = 5
 
         local UIList = Instance.new("UIListLayout", Scroll)
@@ -136,7 +136,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
         _G.KillAura = false
         _G.AutoFarm = false
         _G.FastAttack = true
-        _G.AutoDodge = false
         _G.ClickTP = false
         _G.Fly = false
         _G.FlySpeed = 2
@@ -187,7 +186,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
         CreateToggle("Mob Aura (NPCs & Bosses)", "MobAura")
         CreateToggle("Kill Aura (Players - Clan Safe)", "KillAura")
         CreateToggle("CFrame Fly Hack", "Fly")
-        CreateToggle("Infinite Auto Dodge (Instinct)", "AutoDodge")
         CreateToggle("Click TP", "ClickTP")
         CreateToggle("ESP Players", "ESP_Players")
         CreateToggle("ESP Chests", "ESP_Chests")
@@ -248,7 +246,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end)
 
-        -- 4. ТЕЛЕПОРТЫ
+        -- 4. ТЕЛЕПОРТЫ ПО ОСТРОВАМ (ИСПРАВЛЕНО)
         local TPHeader = Instance.new("TextLabel", Scroll)
         TPHeader.Size = UDim2.new(1, -10, 0, 25)
         TPHeader.Text = "-- Island Teleports --"
@@ -257,30 +255,35 @@ SubmitBtn.MouseButton1Click:Connect(function()
         TPHeader.BackgroundTransparency = 1
 
         local Islands = {
-            ["Starter Island"] = Vector3.new(1095, 16, 1420),
-            ["Marine Fortress"] = Vector3.new(-5042, 73, 4323),
-            ["Prison"] = Vector3.new(4850, 5, 730),
-            ["Jungle"] = Vector3.new(-1612, 36, 148),
-            ["Cafe (Sea 2)"] = Vector3.new(-380, 73, 298),
-            ["Mansion (Sea 3)"] = Vector3.new(-12460, 375, -7540)
+            {"Starter Island", Vector3.new(1095, 16, 1420)},
+            {"Marine Fortress", Vector3.new(-5042, 73, 4323)},
+            {"Prison", Vector3.new(4850, 5, 730)},
+            {"Jungle", Vector3.new(-1612, 36, 148)},
+            {"Cafe (Sea 2)", Vector3.new(-380, 73, 298)},
+            {"Mansion (Sea 3)", Vector3.new(-12460, 375, -7540)}
         }
 
-        for islandName, coords in pairs(Islands) do
+        for _, item in ipairs(Islands) do
+            local islandName = item[1]
+            local coords = item[2]
+            
             local TpBtn = Instance.new("TextButton", Scroll)
-            TpBtn.Size = UDim2.new(1, -10, 0, 30)
-            TpBtn.BackgroundColor3 = Color3.fromRGB(40, 50, 60)
+            TpBtn.Size = UDim2.new(1, -10, 0, 32)
+            TpBtn.BackgroundColor3 = Color3.fromRGB(40, 50, 65)
             TpBtn.Text = "TP To: " .. islandName
             TpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            TpBtn.Font = Enum.Font.SourceSans
+            TpBtn.Font = Enum.Font.SourceSansBold
+            TpBtn.TextSize = 13
 
             TpBtn.MouseButton1Click:Connect(function()
-                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(coords)
+                local lp = game.Players.LocalPlayer
+                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                    lp.Character.HumanoidRootPart.CFrame = CFrame.new(coords)
                 end
             end)
         end
 
-        -- 5. ДВИЖКИ (FLY & INFINITE INSTINCT)
+        -- 5. ДВИЖКИ
         local LocalPlayer = game.Players.LocalPlayer
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -317,7 +320,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end
 
-        -- CFRAME FLY ENGINE (Рабочий полет)
+        -- FLY ENGINE
         task.spawn(function()
             while true do
                 task.wait(0.01)
@@ -326,21 +329,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
                     local cam = workspace.CurrentCamera
                     hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + cam.CFrame.LookVector) * CFrame.new(0, 0, -_G.FlySpeed)
                     hrp.Velocity = Vector3.new(0, 0, 0)
-                end
-            end
-        end)
-
-        -- INFINITE AUTO DODGE (Инстинкт)
-        task.spawn(function()
-            while true do
-                task.wait(0.05)
-                if _G.AutoDodge then
-                    pcall(function()
-                        -- Перезапуск инстинкта уклонения
-                        ReplicatedStorage.Remotes.CommE:FireServer("Dodge")
-                        ReplicatedStorage.Remotes.CommF_:InvokeServer("EnableBuso")
-                        ReplicatedStorage.Remotes.CommF_:InvokeServer("KenTalk", "Buy")
-                    end)
                 end
             end
         end)
