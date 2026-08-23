@@ -1,12 +1,9 @@
--- Zenith Utility V1.2 (Full Master Hub)
--- Key System, Fixed Mobile Drag, Auto Farm & New Combat Modules
+-- Zenith Utility V1.2 (Full GUI + Mobile Touch Slider)
+-- Key System, Mobile Drag, Dynamic Slider (25-75 studs)
 
 local CorrectKey = "Eclipse"
-local KeyPassed = false
 
--- ==========================================
--- 1. СИСТЕМА ПРОВЕРКИ КЛЮЧА
--- ==========================================
+-- 1. СИСТЕМА КЛЮЧА
 local KeyScreen = Instance.new("ScreenGui")
 KeyScreen.Name = "ZenithKeySystem"
 KeyScreen.ResetOnSpawn = false
@@ -52,12 +49,9 @@ SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
 
 SubmitBtn.MouseButton1Click:Connect(function()
     if KeyInput.Text == CorrectKey then
-        KeyPassed = true
         KeyScreen:Destroy()
         
-        -- ==========================================
-        -- 2. ОСНОВНОЙ ИНТЕРФЕЙС V1.2
-        -- ==========================================
+        -- 2. ОСНОВНОЙ ГРАФИЧЕСКИЙ ИНТЕРФЕЙС
         local MainGui = Instance.new("ScreenGui")
         MainGui.Name = "ZenithHubV12"
         MainGui.ResetOnSpawn = false
@@ -69,25 +63,36 @@ SubmitBtn.MouseButton1Click:Connect(function()
         MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
         MainFrame.Active = true
 
-        -- ФИКС ДРАГА ДЛЯ МОБИЛОК (Touch & Mouse Drag)
+        -- КНОПКА СВОРАЧИВАНИЯ (TOGGLE BUTTON "Z")
+        local OpenBtn = Instance.new("TextButton", MainGui)
+        OpenBtn.Size = UDim2.new(0, 50, 0, 50)
+        OpenBtn.Position = UDim2.new(0.1, 0, 0.2, 0)
+        OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 180)
+        OpenBtn.Text = "Z"
+        OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 20)
+        OpenBtn.TextSize = 22
+        OpenBtn.Font = Enum.Font.SourceSansBold
+        OpenBtn.Active = true
+        OpenBtn.Draggable = true
+
+        local UICorner = Instance.new("UICorner", OpenBtn)
+        UICorner.CornerRadius = UDim.new(1, 0)
+
+        OpenBtn.MouseButton1Click:Connect(function()
+            MainFrame.Visible = not MainFrame.Visible
+        end)
+
+        -- МОБИЛЬНЫЙ ДРАГ ОКНА
         local UserInputService = game:GetService("UserInputService")
         local dragging, dragInput, dragStart, startPos
-
-        local function update(input)
-            local delta = input.Position - dragStart
-            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
 
         MainFrame.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
                 dragStart = input.Position
                 startPos = MainFrame.Position
-                
                 input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
-                    end
+                    if input.UserInputState == Enum.UserInputState.End then dragging = false end
                 end)
             end
         end)
@@ -100,7 +105,8 @@ SubmitBtn.MouseButton1Click:Connect(function()
 
         UserInputService.InputChanged:Connect(function(input)
             if input == dragInput and dragging then
-                update(input)
+                local delta = input.Position - dragStart
+                MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             end
         end)
 
@@ -112,38 +118,117 @@ SubmitBtn.MouseButton1Click:Connect(function()
         Title.Font = Enum.Font.SourceSansBold
         Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 
-        -- ==========================================
-        -- 3. ГЛОБАЛЬНЫЕ НАСТРОЙКИ И ФУНКЦИИ
-        -- ==========================================
+        -- СПИСОК ФУНКЦИЙ
+        local Scroll = Instance.new("ScrollingFrame", MainFrame)
+        Scroll.Size = UDim2.new(1, -10, 1, -45)
+        Scroll.Position = UDim2.new(0, 5, 0, 40)
+        Scroll.BackgroundTransparency = 1
+        Scroll.CanvasSize = UDim2.new(0, 0, 0, 350)
+        Scroll.ScrollBarThickness = 4
+
+        local UIList = Instance.new("UIListLayout", Scroll)
+        UIList.SortOrder = Enum.SortOrder.LayoutOrder
+        UIList.Padding = UDim.new(0, 8)
+
+        -- НАСТРОЙКИ
         _G.AuraDistance = 50
-        _G.WeaponType = "Melee" -- "Melee", "Sword", "Blox Fruit"
         _G.MobAura = false
         _G.KillAura = false
         _G.AutoDodge = false
         _G.ClickTP = false
-        _G.Fly = false
 
-        local LocalPlayer = game.Players.LocalPlayer
+        -- TOGGLES (Переключатели)
+        local function CreateToggle(name, globalVar)
+            local Btn = Instance.new("TextButton", Scroll)
+            Btn.Size = UDim2.new(1, -10, 0, 35)
+            Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+            Btn.Text = name .. ": OFF"
+            Btn.TextColor3 = Color3.fromRGB(255, 80, 80)
+            Btn.Font = Enum.Font.SourceSansBold
+            Btn.TextSize = 14
 
-        -- Авто-выбор и взятие оружия
-        local function EquipWeapon()
-            if LocalPlayer.Character then
-                for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
-                    if item:IsA("Tool") and (item.ToolTip == _G.WeaponType or item.Name:find(_G.WeaponType)) then
-                        LocalPlayer.Character.Humanoid:EquipTool(item)
-                    end
+            Btn.MouseButton1Click:Connect(function()
+                _G[globalVar] = not _G[globalVar]
+                if _G[globalVar] then
+                    Btn.Text = name .. ": ON"
+                    Btn.TextColor3 = Color3.fromRGB(80, 255, 120)
+                else
+                    Btn.Text = name .. ": OFF"
+                    Btn.TextColor3 = Color3.fromRGB(255, 80, 80)
                 end
-            end
+            end)
         end
 
-        -- Моб Аура & Килл Аура
+        CreateToggle("Mob Aura (NPCs & Bosses)", "MobAura")
+        CreateToggle("Kill Aura (Players - Clan Safe)", "KillAura")
+        CreateToggle("Auto Dodge", "AutoDodge")
+        CreateToggle("Click TP", "ClickTP")
+
+        -- ==========================================
+        -- МОБИЛЬНЫЙ СЛАЙДЕР ДИСТАНЦИИ (25-75 STUDS)
+        -- ==========================================
+        local SliderFrame = Instance.new("Frame", Scroll)
+        SliderFrame.Size = UDim2.new(1, -10, 0, 50)
+        SliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+
+        local SliderTitle = Instance.new("TextLabel", SliderFrame)
+        SliderTitle.Size = UDim2.new(1, 0, 0, 20)
+        SliderTitle.Text = "Aura Distance: 50 studs"
+        SliderTitle.TextColor3 = Color3.fromRGB(0, 255, 180)
+        SliderTitle.Font = Enum.Font.SourceSansBold
+        SliderTitle.TextSize = 13
+        SliderTitle.BackgroundTransparency = 1
+
+        local Track = Instance.new("Frame", SliderFrame)
+        Track.Size = UDim2.new(0.9, 0, 0, 8)
+        Track.Position = UDim2.new(0.05, 0, 0.65, 0)
+        Track.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+
+        local Fill = Instance.new("Frame", Track)
+        Fill.Size = UDim2.new(0.5, 0, 1, 0) -- 50% по умолчанию (50 studs)
+        Fill.BackgroundColor3 = Color3.fromRGB(0, 255, 180)
+
+        local SliderBtn = Instance.new("TextButton", Track)
+        SliderBtn.Size = UDim2.new(1, 0, 1, 0)
+        SliderBtn.BackgroundTransparency = 1
+        SliderBtn.Text = ""
+
+        local isSliding = false
+
+        local function UpdateSlider(input)
+            local pos = math.clamp((input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
+            Fill.Size = UDim2.new(pos, 0, 1, 0)
+            local val = math.floor(25 + (pos * 50)) -- От 25 до 75 studs
+            _G.AuraDistance = val
+            SliderTitle.Text = "Aura Distance: " .. tostring(val) .. " studs"
+        end
+
+        SliderBtn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                isSliding = true
+                UpdateSlider(input)
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if isSliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                UpdateSlider(input)
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                isSliding = false
+            end
+        end)
+
+        -- ЛОГИКА АТАКИ И АУРЫ
+        local LocalPlayer = game.Players.LocalPlayer
         task.spawn(function()
             while task.wait(0.1) do
                 if (_G.MobAura or _G.KillAura) and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    EquipWeapon()
                     local myPos = LocalPlayer.Character.HumanoidRootPart.Position
 
-                    -- MOB AURA
                     if _G.MobAura and workspace:FindFirstChild("Enemies") then
                         for _, enemy in pairs(workspace.Enemies:GetChildren()) do
                             if enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
@@ -156,7 +241,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
                         end
                     end
 
-                    -- KILL AURA (Игнорирует клан)
                     if _G.KillAura then
                         for _, p in pairs(game.Players:GetPlayers()) do
                             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -188,15 +272,13 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end)
 
-        -- CLICK TP (Телепорт по тапу/клику)
+        -- CLICK TP
         local Mouse = LocalPlayer:GetMouse()
         Mouse.Button1Down:Connect(function()
             if _G.ClickTP and Mouse.Hit and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
             end
         end)
-
-        print("Zenith Hub V1.2 is fully active!")
     else
         KeyInput.Text = ""
         KeyInput.PlaceholderText = "Wrong Key!"
