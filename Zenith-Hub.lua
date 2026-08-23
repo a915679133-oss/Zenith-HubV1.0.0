@@ -1,5 +1,5 @@
--- Zenith Hub V1.2 (Full & Restored Version)
--- Key System, Original CFrame Teleports, Fixed Auto-Farm, Fast Attack, ESP
+-- Zenith Hub V1.2 (Full & Fixed Engine)
+-- Auto Space Trim Key System, Original CFrame Teleports, Level Quests & Mob Aura
 
 local CorrectKey = "Eclipse"
 
@@ -48,7 +48,10 @@ SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
 
 SubmitBtn.MouseButton1Click:Connect(function()
-    if KeyInput.Text == CorrectKey then
+    -- Очистка от пробелов по краям
+    local cleanKey = string.match(KeyInput.Text, "^%s*(.-)%s*$")
+    
+    if cleanKey == CorrectKey then
         KeyScreen:Destroy()
         
         -- 2. MAIN GUI
@@ -110,7 +113,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
 
         local Title = Instance.new("TextLabel", MainFrame)
         Title.Size = UDim2.new(1, 0, 0, 35)
-        Title.Text = "Zenith Hub V1.2 | Restored Full Script"
+        Title.Text = "Zenith Hub V1.2 | Fixed Key & Auto Farm"
         Title.TextColor3 = Color3.fromRGB(0, 255, 180)
         Title.TextSize = 15
         Title.Font = Enum.Font.SourceSansBold
@@ -244,7 +247,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end)
 
-        -- 4. ТЕЛЕПОРТЫ ПО ОСТРОВАМ (CRAME ИЗ V1)
+        -- 4. ТЕЛЕПОРТЫ ИЗ V1
         local TPHeader = Instance.new("TextLabel", Scroll)
         TPHeader.Size = UDim2.new(1, -10, 0, 25)
         TPHeader.Text = "-- Island Teleports --"
@@ -265,6 +268,13 @@ SubmitBtn.MouseButton1Click:Connect(function()
             {"Mansion (Sea 3)", Vector3.new(-12460, 375, -7540)}
         }
 
+        local function FastTP(cframe)
+            local lp = game.Players.LocalPlayer
+            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                lp.Character.HumanoidRootPart.CFrame = cframe
+            end
+        end
+
         for _, item in ipairs(Islands) do
             local islandName = item[1]
             local coords = item[2]
@@ -278,14 +288,11 @@ SubmitBtn.MouseButton1Click:Connect(function()
             TpBtn.TextSize = 13
 
             TpBtn.MouseButton1Click:Connect(function()
-                local lp = game.Players.LocalPlayer
-                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    lp.Character.HumanoidRootPart.CFrame = CFrame.new(coords)
-                end
+                FastTP(CFrame.new(coords))
             end)
         end
 
-        -- GAME LOGIC & ENGINE
+        -- GAME LOGIC & ATTACK
         local LocalPlayer = game.Players.LocalPlayer
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -321,11 +328,11 @@ SubmitBtn.MouseButton1Click:Connect(function()
             end
         end
 
-        -- QUEST DATA ASSIGNMENT
-        local function GetQuestData()
+        -- ВЫБОР КВЕСТА СТРОГО ПО УРОВНЮ
+        local function GetQuestByLevel()
             local level = 1
             pcall(function() level = LocalPlayer.Data.Level.Value end)
-            
+
             if level >= 1 and level < 10 then
                 return "BanditQuest1", 1, "Bandit", CFrame.new(1060, 16, 1548), CFrame.new(1145, 17, 1634)
             elseif level >= 10 and level < 15 then
@@ -353,28 +360,29 @@ SubmitBtn.MouseButton1Click:Connect(function()
                 task.wait(0.01)
                 if _G.AutoFarm and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                     pcall(function()
-                        local questTitle, questId, mobName, questCFrame, mobCFrame = GetQuestData()
-                        local questFrame = LocalPlayer.PlayerGui.Main:FindFirstChild("Quest")
+                        local questTitle, questId, mobName, questCFrame, mobCFrame = GetQuestByLevel()
+                        local mainGui = LocalPlayer.PlayerGui:FindFirstChild("Main")
+                        local questFrame = mainGui and mainGui:FindFirstChild("Quest")
                         local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
-                        
+
                         if not (questFrame and questFrame.Visible) then
-                            LocalPlayer.Character.HumanoidRootPart.CFrame = questCFrame
-                            task.wait(0.5)
+                            FastTP(questCFrame)
+                            task.wait(0.3)
                             CommF:InvokeServer("StartQuest", questTitle, questId)
                         else
-                            local enemyFound = false
+                            local mobFound = false
                             if workspace:FindFirstChild("Enemies") then
                                 for _, enemy in pairs(workspace.Enemies:GetChildren()) do
                                     if enemy.Name == mobName and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                                        enemyFound = true
-                                        LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                                        mobFound = true
+                                        FastTP(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3))
                                         if _G.FastAttack then Attack() end
                                         break
                                     end
                                 end
                             end
-                            if not enemyFound then
-                                LocalPlayer.Character.HumanoidRootPart.CFrame = mobCFrame
+                            if not mobFound then
+                                FastTP(mobCFrame)
                             end
                         end
                     end)
@@ -394,7 +402,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
                             if enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
                                 local dist = (enemy.HumanoidRootPart.Position - myPos).Magnitude
                                 if dist <= _G.AuraDistance then
-                                    LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                                    FastTP(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3))
                                     if _G.FastAttack then Attack() end
                                 end
                             end
@@ -411,7 +419,7 @@ SubmitBtn.MouseButton1Click:Connect(function()
                                 if not isSameClan then
                                     local dist = (p.Character.HumanoidRootPart.Position - myPos).Magnitude
                                     if dist <= _G.AuraDistance then
-                                        LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                                        FastTP(p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3))
                                         if _G.FastAttack then Attack() end
                                     end
                                 end
@@ -439,14 +447,13 @@ SubmitBtn.MouseButton1Click:Connect(function()
         local Mouse = LocalPlayer:GetMouse()
         Mouse.Button1Down:Connect(function()
             if _G.ClickTP and Mouse.Hit and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
+                FastTP(CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0)))
             end
         end)
 
-        -- ESP ENGINE (PLAYERS, CHESTS, FRUITS)
+        -- ESP ENGINE
         task.spawn(function()
             while task.wait(0.5) do
-                -- Players ESP
                 for _, p in pairs(game.Players:GetPlayers()) do
                     if p ~= LocalPlayer and p.Character then
                         local hl = p.Character:FindFirstChild("ZenithPlayerESP")
@@ -463,7 +470,6 @@ SubmitBtn.MouseButton1Click:Connect(function()
                     end
                 end
 
-                -- Chests & Fruits ESP
                 for _, obj in pairs(workspace:GetChildren()) do
                     if obj.Name:find("Chest") then
                         local hl = obj:FindFirstChild("ZenithChestESP")
