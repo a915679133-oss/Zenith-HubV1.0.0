@@ -50,7 +50,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -120, 0, 40)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Zenith-Utility V3.0 | Blox Fruits"
+TitleLabel.Text = "Zenith-Utility V3.5 | Blox Fruits"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 16
 TitleLabel.Font = Enum.Font.SourceSansBold
@@ -207,7 +207,7 @@ RunService.RenderStepped:Connect(function()
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             local pos = char.HumanoidRootPart.Position
-            CoordsLabel.Text = string.Format("Pos: %.0f, %.0f, %.0f", pos.X, pos.Y, pos.Z)
+            CoordsLabel.Text = string.format("Pos: %.0f, %.0f, %.0f", pos.X, pos.Y, pos.Z)
         end
     end)
 end)
@@ -247,69 +247,69 @@ end
 
 local QuestsAllSeas = {
     [1] = {
-        {Min = 1, Max = 9, QuestName = "BanditQuest1", LevelReq = 1},
-        {Min = 10, Max = 14, QuestName = "JungleQuest", LevelReq = 1},
-        {Min = 15, Max = 29, QuestName = "JungleQuest", LevelReq = 2},
-        {Min = 30, Max = 39, QuestName = "BuggyQuest1", LevelReq = 1},
-        {Min = 40, Max = 59, QuestName = "BuggyQuest1", LevelReq = 2},
-        {Min = 60, Max = 74, QuestName = "DesertQuest", LevelReq = 1},
-        {Min = 75, Max = 89, QuestName = "DesertQuest", LevelReq = 2},
-        {Min = 90, Max = 99, QuestName = "SnowQuest", LevelReq = 1},
-        {Min = 100, Max = 119, QuestName = "SnowQuest", LevelReq = 2},
-        {Min = 120, Max = 129, QuestName = "MarineQuest", LevelReq = 1},
-        {Min = 130, Max = 149, QuestName = "MarineQuest", LevelReq = 2},
-        {Min = 150, Max = 174, QuestName = "ImpelQuest", LevelReq = 1},
-        {Min = 175, Max = 189, QuestName = "ImpelQuest", LevelReq = 2},
-        {Min = 190, Max = 209, QuestName = "SkyQuest", LevelReq = 1},
-        {Min = 210, Max = 249, QuestName = "SkyQuest", LevelReq = 2},
-        {Min = 250, Max = 274, QuestName = "PrisonQuest", LevelReq = 1},
-        {Min = 275, Max = 299, QuestName = "PrisonQuest", LevelReq = 2},
-        {Min = 300, Max = 324, QuestName = "ColosseumQuest", LevelReq = 1},
-        {Min = 325, Max = 374, QuestName = "ColosseumQuest", LevelReq = 2},
-        {Min = 375, Max = 399, QuestName = "MagmaQuest", LevelReq = 1},
-        {Min = 400, Max = 449, QuestName = "MagmaQuest", LevelReq = 2},
-        {Min = 450, Max = 474, QuestName = "FishmanQuest", LevelReq = 1},
-        {Min = 475, Max = 524, QuestName = "FishmanQuest", LevelReq = 2},
-        {Min = 525, Max = 549, QuestName = "HopQuest", LevelReq = 1},
-        {Min = 550, Max = 624, QuestName = "HopQuest", LevelReq = 2},
-        {Min = 625, Max = 700, QuestName = "FountainQuest", LevelReq = 1},
+        {Min = 1, Max = 9, QuestName = "BanditQuest1", LevelReq = 1, MobName = "Bandit"},
+        {Min = 10, Max = 14, QuestName = "JungleQuest", LevelReq = 1, MobName = "Monkey"},
+        {Min = 15, Max = 29, QuestName = "JungleQuest", LevelReq = 2, MobName = "Gorilla"},
+        {Min = 30, Max = 39, QuestName = "BuggyQuest1", LevelReq = 1, MobName = "Pirate"},
+        {Min = 40, Max = 59, QuestName = "BuggyQuest1", LevelReq = 2, MobName = "Brute"},
+        {Min = 60, Max = 74, QuestName = "DesertQuest", LevelReq = 1, MobName = "Desert Bandit"},
+        {Min = 75, Max = 89, QuestName = "DesertQuest", LevelReq = 2, MobName = "Desert Officer"},
+        {Min = 90, Max = 99, QuestName = "SnowQuest", LevelReq = 1, MobName = "Snow Trooper"},
+        {Min = 100, Max = 119, QuestName = "SnowQuest", LevelReq = 2, MobName = "Winter Warrior"},
+        {Min = 120, Max = 129, QuestName = "MarineQuest", LevelReq = 1, MobName = "Chief Petty Officer"},
+        {Min = 130, Max = 149, QuestName = "MarineQuest", LevelReq = 2, MobName = "Petty Officer"},
+        {Min = 150, Max = 174, LevelReq = 1, QuestName = "ImpelQuest", MobName = "Prisoner"},
+        {Min = 175, Max = 189, LevelReq = 2, QuestName = "ImpelQuest", MobName = "Dangerous Prisoner"},
+        {Min = 190, Max = 209, QuestName = "SkyQuest", LevelReq = 1, MobName = "Toga Warrior"},
+        {Min = 210, Max = 249, QuestName = "SkyQuest", LevelReq = 2, MobName = "Gladiator"},
+        {Min = 250, Max = 274, QuestName = "PrisonQuest", LevelReq = 1, MobName = "Military Soldier"},
+        {Min = 275, Max = 299, QuestName = "PrisonQuest", LevelReq = 2, MobName = "Military Spy"},
+        {Min = 300, Max = 324, QuestName = "ColosseumQuest", LevelReq = 1, MobName = "God's Guard"},
+        {Min = 325, Max = 374, QuestName = "ColosseumQuest", LevelReq = 2, MobName = "Shanda"},
+        {Min = 375, Max = 399, QuestName = "MagmaQuest", LevelReq = 1, MobName = "Military Subordinate"},
+        {Min = 400, Max = 449, QuestName = "MagmaQuest", LevelReq = 2, MobName = "Warrior"},
+        {Min = 450, Max = 474, QuestName = "FishmanQuest", LevelReq = 1, MobName = "Fishman Warrior"},
+        {Min = 475, Max = 524, QuestName = "FishmanQuest", LevelReq = 2, MobName = "Fishman Commando"},
+        {Min = 525, Max = 549, QuestName = "HopQuest", LevelReq = 1, MobName = "God's Guard"},
+        {Min = 550, Max = 624, QuestName = "HopQuest", LevelReq = 2, MobName = "Shanda"},
+        {Min = 625, Max = 700, QuestName = "FountainQuest", LevelReq = 1, MobName = "Galley Pirate"},
     },
     [2] = {
-        {Min = 700, Max = 724, QuestName = "Area1Quest", LevelReq = 1},
-        {Min = 725, Max = 774, QuestName = "Area1Quest", LevelReq = 2},
-        {Min = 775, Max = 799, QuestName = "Area2Quest", LevelReq = 1},
-        {Min = 800, Max = 874, QuestName = "Area2Quest", LevelReq = 2},
-        {Min = 875, Max = 899, QuestName = "MarineQuest3", LevelReq = 1},
-        {Min = 900, Max = 949, QuestName = "MarineQuest3", LevelReq = 2},
-        {Min = 950, Max = 974, QuestName = "FairyQuest", LevelReq = 1},
-        {Min = 975, Max = 999, QuestName = "FairyQuest", LevelReq = 2},
-        {Min = 1000, Max = 1049, QuestName = "IceSideQuest", LevelReq = 1},
-        {Min = 1050, Max = 1099, QuestName = "IceSideQuest", LevelReq = 2},
-        {Min = 1100, Max = 1149, QuestName = "FireSideQuest", LevelReq = 1},
-        {Min = 1150, Max = 1199, QuestName = "FireSideQuest", LevelReq = 2},
-        {Min = 1200, Max = 1249, QuestName = "ShipQuest1", LevelReq = 1},
-        {Min = 1250, Max = 1299, QuestName = "ShipQuest2", LevelReq = 1},
-        {Min = 1300, Max = 1349, QuestName = "SnowMountainQuest", LevelReq = 1},
-        {Min = 1350, Max = 1424, QuestName = "SnowMountainQuest", LevelReq = 2},
-        {Min = 1425, Max = 1500, QuestName = "KokoQuest", LevelReq = 1},
+        {Min = 700, Max = 724, QuestName = "Area1Quest", LevelReq = 1, MobName = "Raider"},
+        {Min = 725, Max = 774, QuestName = "Area1Quest", LevelReq = 2, MobName = "Mercenary"},
+        {Min = 775, Max = 799, QuestName = "Area2Quest", LevelReq = 1, MobName = "Swan Pirate"},
+        {Min = 800, Max = 874, QuestName = "Area2Quest", LevelReq = 2, MobName = "Factory Staff"},
+        {Min = 875, Max = 899, QuestName = "MarineQuest3", LevelReq = 1, MobName = "Marine Lieutenant"},
+        {Min = 900, Max = 949, QuestName = "MarineQuest3", LevelReq = 2, MobName = "Marine Captain"},
+        {Min = 950, Max = 974, QuestName = "FairyQuest", LevelReq = 1, MobName = "Zombie"},
+        {Min = 975, Max = 999, QuestName = "FairyQuest", LevelReq = 2, MobName = "Vampire"},
+        {Min = 1000, Max = 1049, QuestName = "IceSideQuest", LevelReq = 1, MobName = "Snow Raider"},
+        {Min = 1050, Max = 1099, QuestName = "IceSideQuest", LevelReq = 2, MobName = "Winter SK"},
+        {Min = 1100, Max = 1149, QuestName = "FireSideQuest", LevelReq = 1, MobName = "Lab Subordinate"},
+        {Min = 1150, Max = 1199, QuestName = "FireSideQuest", LevelReq = 2, MobName = "Horned Warrior"},
+        {Min = 1200, Max = 1249, QuestName = "ShipQuest1", LevelReq = 1, MobName = "Deckhand"},
+        {Min = 1250, Max = 1299, QuestName = "ShipQuest2", LevelReq = 1, MobName = "Engineer"},
+        {Min = 1300, Max = 1349, QuestName = "SnowMountainQuest", LevelReq = 1, MobName = "Snow Lurker"},
+        {Min = 1350, Max = 1424, QuestName = "SnowMountainQuest", LevelReq = 2, MobName = "Jade Warrior"},
+        {Min = 1425, Max = 1500, QuestName = "KokoQuest", LevelReq = 1, MobName = "Rebellion Soldier"},
     },
     [3] = {
-        {Min = 1500, Max = 1574, QuestName = "PiratePortQuest", LevelReq = 1},
-        {Min = 1575, Max = 1624, QuestName = "PiratePortQuest", LevelReq = 2},
-        {Min = 1625, Max = 1699, QuestName = "AmazonQuest", LevelReq = 1},
-        {Min = 1700, Max = 1749, QuestName = "AmazonQuest", LevelReq = 2},
-        {Min = 1750, Max = 1824, QuestName = "MarineTreeQuest", LevelReq = 1},
-        {Min = 1825, Max = 1899, QuestName = "MarineTreeQuest", LevelReq = 2},
-        {Min = 1900, Max = 1974, QuestName = "DeepForestQuest", LevelReq = 1},
-        {Min = 1975, Max = 2049, QuestName = "DeepForestQuest", LevelReq = 2},
-        {Min = 2050, Max = 2124, QuestName = "DeepForestIslandQuest", LevelReq = 1},
-        {Min = 2125, Max = 2199, QuestName = "DeepForestIslandQuest", LevelReq = 2},
-        {Min = 2200, Max = 2274, QuestName = "HauntedQuest1", LevelReq = 1},
-        {Min = 2275, Max = 2349, QuestName = "HauntedQuest2", LevelReq = 1},
-        {Min = 2350, Max = 2449, QuestName = "NutsIslandQuest", LevelReq = 1},
-        {Min = 2450, Max = 2525, QuestName = "IceCreamQuest", LevelReq = 1},
-        {Min = 2526, Max = 2600, QuestName = "CandyQuest1", LevelReq = 1},
-        {Min = 2601, Max = 3000, QuestName = "TikiQuest1", LevelReq = 1},
+        {Min = 1500, Max = 1574, QuestName = "PiratePortQuest", LevelReq = 1, MobName = "Pirate Millionaire"},
+        {Min = 1575, Max = 1624, QuestName = "PiratePortQuest", LevelReq = 2, MobName = "Pistol Billionaire"},
+        {Min = 1625, Max = 1699, QuestName = "AmazonQuest", LevelReq = 1, MobName = "Dragon Crew Warrior"},
+        {Min = 1700, Max = 1749, QuestName = "AmazonQuest", LevelReq = 2, MobName = "Dragon Crew Archer"},
+        {Min = 1750, Max = 1824, QuestName = "MarineTreeQuest", LevelReq = 1, MobName = "Female Islander"},
+        {Min = 1825, Max = 1899, QuestName = "MarineTreeQuest", LevelReq = 2, MobName = "Giant Islander"},
+        {Min = 1900, Max = 1974, QuestName = "DeepForestQuest", LevelReq = 1, MobName = "Forest Pirate"},
+        {Min = 1975, Max = 2049, QuestName = "DeepForestQuest", LevelReq = 2, MobName = "Mythological Pirate"},
+        {Min = 2050, Max = 2124, QuestName = "DeepForestIslandQuest", LevelReq = 1, MobName = "Jungle Pirate"},
+        {Min = 2125, Max = 2199, QuestName = "DeepForestIslandQuest", LevelReq = 2, MobName = "Musketeer Pirate"},
+        {Min = 2200, Max = 2274, QuestName = "HauntedQuest1", LevelReq = 1, MobName = "Reborn Skeleton"},
+        {Min = 2275, Max = 2349, QuestName = "HauntedQuest2", LevelReq = 1, MobName = "Living Zombie"},
+        {Min = 2350, Max = 2449, QuestName = "NutsIslandQuest", LevelReq = 1, MobName = "Peanut Scout"},
+        {Min = 2450, Max = 2525, QuestName = "IceCreamQuest", LevelReq = 1, MobName = "Ice Cream Chef"},
+        {Min = 2526, Max = 2600, QuestName = "CandyQuest1", LevelReq = 1, MobName = "Candy Rebel"},
+        {Min = 2601, Max = 3000, QuestName = "TikiQuest1", LevelReq = 1, MobName = "Island Boy"},
     }
 }
 
@@ -326,7 +326,13 @@ local function getBestQuestForPlayer()
     return bestMatch
 end
 
-local function getClosestEnemy()
+local function getQuestMobForFarm()
+    local q = getBestQuestForPlayer()
+    return q and q.MobName or nil
+end
+
+local function getClosestQuestEnemy()
+    local targetMobName = getQuestMobForFarm()
     local closest, dist = nil, math.huge
     local enemies = workspace:FindFirstChild("Enemies")
     if not enemies then return nil end
@@ -334,8 +340,10 @@ local function getClosestEnemy()
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
         local hum = enemy:FindFirstChild("Humanoid")
         if hrp and hum and hum.Health > 0 then
-            local d = (LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
-            if d < dist then dist = d closest = enemy end
+            if not targetMobName or string.find(enemy.Name, targetMobName) then
+                local d = (LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                if d < dist then dist = d closest = enemy end
+            end
         end
     end
     return closest
@@ -438,7 +446,7 @@ task.spawn(function()
                 if playerGui then
                     local mainGui = playerGui:FindFirstChild("Main")
                     local activeQuest = mainGui and mainGui:FindFirstChild("Quest") and mainGui.Quest.Visible
-                    if not activeQuest and AutoQuest then
+                    if not activeQuest then
                         local bestQuest = getBestQuestForPlayer()
                         if bestQuest then
                             acceptQuest(bestQuest.QuestName, bestQuest.LevelReq)
@@ -446,7 +454,7 @@ task.spawn(function()
                     end
                 end
                 
-                local enemy = getClosestEnemy()
+                local enemy = getClosestQuestEnemy()
                 if enemy and enemy:FindFirstChild("HumanoidRootPart") then
                     LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0) * CFrame.Angles(math.rad(-90), 0, 0)
                 end
@@ -473,16 +481,19 @@ task.spawn(function()
             pcall(function()
                 local enemies = workspace:FindFirstChild("Enemies")
                 local char = LocalPlayer.Character
+                local targetMobName = getQuestMobForFarm()
                 if enemies and char and char:FindFirstChild("HumanoidRootPart") then
                     local hrp = char.HumanoidRootPart
                     for _, enemy in pairs(enemies:GetChildren()) do
                         local enemyHrp = enemy:FindFirstChild("HumanoidRootPart")
                         local enemyHum = enemy:FindFirstChild("Humanoid")
                         if enemyHrp and enemyHum and enemyHum.Health > 0 then
-                            local distance = (hrp.Position - enemyHrp.Position).Magnitude
-                            if distance <= MobAuraRadius then
-                                enemyHrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -3)
-                                enemyHrp.CanCollide = false
+                            if not targetMobName or string.find(enemy.Name, targetMobName) then
+                                local distance = (hrp.Position - enemyHrp.Position).Magnitude
+                                if distance <= MobAuraRadius then
+                                    enemyHrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -3)
+                                    enemyHrp.CanCollide = false
+                                end
                             end
                         end
                     end
@@ -505,13 +516,14 @@ task.spawn(function()
                                 local hrp = char.HumanoidRootPart
                                 local savedPos = hrp.CFrame
                                 
+                                hrp.CFrame = handle.CFrame
+                                task.wait(0.2) -- задержка, чтобы игра засчитала подбор
+                                hrp.CFrame = savedPos
+                                
                                 task.spawn(function()
                                     task.wait(1.5)
+                                    savedPos = nil
                                 end)
-                                
-                                hrp.CFrame = handle.CFrame
-                                task.wait(0.5)
-                                hrp.CFrame = savedPos
                             end
                         end
                     end
