@@ -1,854 +1,341 @@
--- Zenith Hub V1.3
-local CorrectKey = "Eclipse"
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-_G.WeaponType = "Melee"
-_G.AuraDistance = 50
-_G.AutoFarm = false
-_G.FastAttack = true
-_G.MobAura = false
-_G.KillAura = false
-_G.Fly = false
-_G.FlySpeed = 2
-_G.ClickTP = false
-_G.ESP_Players = false
-_G.ESP_Chests = false
-_G.ESP_Fruits = false
-_G.AttackSpeed = 0.08
-_G.ESPShowDistance = true
-_G.ESPShowName = true
-_G.ESPPlayerColor = Color3.fromRGB(255, 50, 50)
-_G.ESPChestColor = Color3.fromRGB(255, 215, 0)
-_G.ESPFruitColor = Color3.fromRGB(200, 50, 255)
-_G.ESPMaxDistance = 500
-_G.ESPUpdateInterval = 0.3
+local Window = Rayfield:CreateWindow({
+   Name = "Zenith-Utility V1.0 | Blox Fruits",
+   LoadingTitle = "Zenith-Utility V1.0",
+   LoadingSubtitle = "by Artem",
+   ConfigurationSaving = { Enabled = false },
+   KeySystem = true,
+   KeySettings = {
+      Title = "Zenith-Utility V1.0 Auth",
+      Subtitle = "Введите ключ доступа",
+      Note = "Введите ключ: Eclipse",
+      FileName = "ZenithUtilityKeySave",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {"Eclipse"}
+   }
+})
 
-local KeyScreen = Instance.new("ScreenGui")
-KeyScreen.Name = "ZenithKeySystem"
-KeyScreen.ResetOnSpawn = false
-if gethui then
-    KeyScreen.Parent = gethui()
-elseif syn and syn.protect_gui then
-    syn.protect_gui(KeyScreen)
-    KeyScreen.Parent = game.CoreGui
-else
-    KeyScreen.Parent = game.CoreGui
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+local LocalPlayer = Players.LocalPlayer
+
+local FlySpeed = 150
+local IsFlying = false
+local AutoQuest = false
+local AutoFarm = false
+local MobAura = false
+local KillAura = false
+local MobAuraRadius = 50
+local AutoCollectFruits = false
+local AutoCollectChests = false
+local FlyBodyVel, FlyBodyGyro
+
+local function tweenTo(targetCFrame, customSpeed)
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    local hrp = char.HumanoidRootPart
+    local speed = customSpeed or FlySpeed
+    local distance = (hrp.Position - targetCFrame.Position).Magnitude
+    local time = distance / speed
+
+    for _, part in pairs(char:GetChildren()) do
+        if part:IsA("BasePart") then part.CanCollide = false end
+    end
+
+    local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    return tween
 end
 
-local KeyFrame = Instance.new("Frame", KeyScreen)
-KeyFrame.Size = UDim2.new(0, 320, 0, 170)
-KeyFrame.Position = UDim2.new(0.5, -160, 0.5, -85)
-KeyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-KeyFrame.Active = true
-KeyFrame.Draggable = true
-
-local KeyTitle = Instance.new("TextLabel", KeyFrame)
-KeyTitle.Size = UDim2.new(1, 0, 0, 35)
-KeyTitle.Text = "Zenith Hub V1.3"
-KeyTitle.TextColor3 = Color3.fromRGB(0, 255, 180)
-KeyTitle.TextSize = 16
-KeyTitle.Font = Enum.Font.SourceSansBold
-KeyTitle.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-
-local KeyInput = Instance.new("TextBox", KeyFrame)
-KeyInput.Size = UDim2.new(0.8, 0, 0, 35)
-KeyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
-KeyInput.PlaceholderText = "Enter Key..."
-KeyInput.Text = ""
-KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-
-local SubmitBtn = Instance.new("TextButton", KeyFrame)
-SubmitBtn.Size = UDim2.new(0.8, 0, 0, 35)
-SubmitBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
-SubmitBtn.Text = "Submit Key"
-SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
-
-local function FastTP(cframe)
-    local lp = game.Players.LocalPlayer
-    if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-        lp.Character.HumanoidRootPart.CFrame = cframe
-    end
+local function acceptQuest(questName, levelReq)
+    pcall(function()
+        local commF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+        commF:InvokeServer("StartQuest", questName, levelReq or 1)
+    end)
 end
 
-local function GetObjectPosition(obj)
-    if not obj then return nil end
-    if obj:IsA("BasePart") then
-        return obj.Position
+local function getCurrentSea()
+    local placeId = game.PlaceId
+    if placeId == 2753915549 then
+        return 1
+    elseif placeId == 4442272183 then
+        return 2
+    elseif placeId == 7449423635 then
+        return 3
     end
-    if obj:IsA("Model") then
-        if obj.PrimaryPart then
-            return obj.PrimaryPart.Position
-        end
-        local hrp = obj:FindFirstChild("HumanoidRootPart")
-        if hrp and hrp:IsA("BasePart") then
-            return hrp.Position
-        end
-        local success, pos = pcall(function()
-            return obj:GetPivot().Position
-        end)
-        if success and pos then
-            return pos
-        end
-        for _, child in pairs(obj:GetChildren()) do
-            if child:IsA("BasePart") then
-                return child.Position
+    local data = LocalPlayer:FindFirstChild("Data")
+    if data and data:FindFirstChild("Level") then
+        local lvl = data.Level.Value
+        if lvl >= 1500 then return 3
+        elseif lvl >= 700 then return 2
+        else return 1 end
+    end
+    return 1
+end
+
+local QuestsAllSeas = {
+    [1] = {
+        {Min = 1, Max = 9, QuestName = "BanditQuest1", LevelReq = 1},
+        {Min = 10, Max = 14, QuestName = "JungleQuest", LevelReq = 1},
+        {Min = 15, Max = 29, QuestName = "JungleQuest", LevelReq = 2},
+        {Min = 30, Max = 39, QuestName = "BuggyQuest1", LevelReq = 1},
+        {Min = 40, Max = 59, QuestName = "BuggyQuest1", LevelReq = 2},
+        {Min = 60, Max = 74, QuestName = "DesertQuest", LevelReq = 1},
+        {Min = 75, Max = 89, QuestName = "DesertQuest", LevelReq = 2},
+        {Min = 90, Max = 99, QuestName = "SnowQuest", LevelReq = 1},
+        {Min = 100, Max = 119, QuestName = "SnowQuest", LevelReq = 2},
+        {Min = 120, Max = 149, QuestName = "MarineQuest", LevelReq = 1},
+        {Min = 150, Max = 174, QuestName = "ImpelQuest", LevelReq = 1},
+        {Min = 175, Max = 189, QuestName = "ImpelQuest", LevelReq = 2},
+        {Min = 190, Max = 209, QuestName = "SkyQuest", LevelReq = 1},
+        {Min = 210, Max = 249, QuestName = "SkyQuest", LevelReq = 2},
+        {Min = 250, Max = 274, QuestName = "PrisonQuest", LevelReq = 1},
+        {Min = 275, Max = 299, QuestName = "PrisonQuest", LevelReq = 2},
+        {Min = 300, Max = 324, QuestName = "ColosseumQuest", LevelReq = 1},
+        {Min = 325, Max = 374, QuestName = "ColosseumQuest", LevelReq = 2},
+        {Min = 375, Max = 399, QuestName = "MagmaQuest", LevelReq = 1},
+        {Min = 400, Max = 449, QuestName = "MagmaQuest", LevelReq = 2},
+        {Min = 450, Max = 474, QuestName = "FishmanQuest", LevelReq = 1},
+        {Min = 475, Max = 524, QuestName = "FishmanQuest", LevelReq = 2},
+        {Min = 525, Max = 549, QuestName = "HopQuest", LevelReq = 1},
+        {Min = 550, Max = 624, QuestName = "HopQuest", LevelReq = 2},
+        {Min = 625, Max = 700, QuestName = "FountainQuest", LevelReq = 1},
+    },
+    [2] = {
+        {Min = 700, Max = 724, QuestName = "Area1Quest", LevelReq = 1},
+        {Min = 725, Max = 774, QuestName = "Area1Quest", LevelReq = 2},
+        {Min = 775, Max = 799, QuestName = "Area2Quest", LevelReq = 1},
+        {Min = 800, Max = 874, QuestName = "Area2Quest", LevelReq = 2},
+        {Min = 875, Max = 899, QuestName = "MarineQuest2", LevelReq = 1},
+        {Min = 900, Max = 949, QuestName = "MarineQuest2", LevelReq = 2},
+        {Min = 950, Max = 974, QuestName = "FairyQuest", LevelReq = 1},
+        {Min = 975, Max = 999, QuestName = "FairyQuest", LevelReq = 2},
+        {Min = 1000, Max = 1049, QuestName = "IceSideQuest", LevelReq = 1},
+        {Min = 1050, Max = 1099, QuestName = "IceSideQuest", LevelReq = 2},
+        {Min = 1100, Max = 1149, QuestName = "FireSideQuest", LevelReq = 1},
+        {Min = 1150, Max = 1199, QuestName = "FireSideQuest", LevelReq = 2},
+        {Min = 1200, Max = 1249, QuestName = "ShipQuest1", LevelReq = 1},
+        {Min = 1250, Max = 1299, QuestName = "ShipQuest2", LevelReq = 1},
+        {Min = 1300, Max = 1349, QuestName = "SnowMountainQuest", LevelReq = 1},
+        {Min = 1350, Max = 1424, QuestName = "SnowMountainQuest", LevelReq = 2},
+        {Min = 1425, Max = 1500, QuestName = "KokoQuest", LevelReq = 1},
+    },
+    [3] = {
+        {Min = 1500, Max = 1574, QuestName = "PiratePortQuest", LevelReq = 1},
+        {Min = 1575, Max = 1624, QuestName = "PiratePortQuest", LevelReq = 2},
+        {Min = 1625, Max = 1699, QuestName = "AmazonQuest", LevelReq = 1},
+        {Min = 1700, Max = 1749, QuestName = "AmazonQuest", LevelReq = 2},
+        {Min = 1750, Max = 1824, QuestName = "MarineTreeQuest", LevelReq = 1},
+        {Min = 1825, Max = 1899, QuestName = "MarineTreeQuest", LevelReq = 2},
+        {Min = 1900, Max = 1974, QuestName = "DeepForestQuest", LevelReq = 1},
+        {Min = 1975, Max = 2049, QuestName = "DeepForestQuest", LevelReq = 2},
+        {Min = 2050, Max = 2124, QuestName = "DeepForestIslandQuest", LevelReq = 1},
+        {Min = 2125, Max = 2199, QuestName = "DeepForestIslandQuest", LevelReq = 2},
+        {Min = 2200, Max = 2274, QuestName = "HauntedQuest1", LevelReq = 1},
+        {Min = 2275, Max = 2349, QuestName = "HauntedQuest2", LevelReq = 1},
+        {Min = 2350, Max = 2449, QuestName = "NutsIslandQuest", LevelReq = 1},
+        {Min = 2450, Max = 2525, QuestName = "IceCreamQuest", LevelReq = 1},
+        {Min = 2526, Max = 2600, QuestName = "CandyQuest1", LevelReq = 1},
+        {Min = 2601, Max = 3000, QuestName = "TikiQuest1", LevelReq = 1},
+    }
+}
+
+local function getBestQuestForPlayer()
+    local currentSea = getCurrentSea()
+    local seaTable = QuestsAllSeas[currentSea]
+    if not seaTable then return nil end
+
+    local data = LocalPlayer:FindFirstChild("Data")
+    if data and data:FindFirstChild("Level") then
+        local lvl = data.Level.Value
+        for _, q in ipairs(seaTable) do
+            if lvl >= q.Min and lvl <= q.Max then
+                return q
             end
         end
     end
     return nil
 end
-local ESPObjects = {}
-local ESPLabels = {}
 
-local function CreateESP(target, color, name, distance)
-    if not target or not target.Parent then return nil end
-    local oldEsp = target:FindFirstChild("ZenithESP")
-    if oldEsp then oldEsp:Destroy() end
+local function getClosestEnemy()
+    local closest, dist = nil, math.huge
+    local enemies = workspace:FindFirstChild("Enemies")
+    if not enemies then return nil end
 
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "ZenithESP"
-    billboard.Adornee = target
-    billboard.Size = UDim2.new(0, 200, 0, 70)
-    billboard.StudsOffset = Vector3.new(0, 4, 0)
-    billboard.AlwaysOnTop = true
-    billboard.ResetOnSpawn = false
-    billboard.Parent = target
-
-    local background = Instance.new("Frame", billboard)
-    background.Size = UDim2.new(1, 0, 1, 0)
-    background.BackgroundColor3 = color
-    background.BackgroundTransparency = 0.2
-    background.BorderSizePixel = 2
-    background.BorderColor3 = color
-
-    if _G.ESPShowName then
-        local nameLabel = Instance.new("TextLabel", billboard)
-        nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
-        nameLabel.Position = UDim2.new(0, 0, 0, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Text = name or "Unknown"
-        nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        nameLabel.TextSize = 14
-        nameLabel.Font = Enum.Font.SourceSansBold
-        nameLabel.TextStrokeTransparency = 0.3
-        ESPLabels[name] = nameLabel
+    for _, enemy in pairs(enemies:GetChildren()) do
+        local hrp = enemy:FindFirstChild("HumanoidRootPart")
+        local hum = enemy:FindFirstChild("Humanoid")
+        if hrp and hum and hum.Health > 0 then
+            local d = (LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+            if d < dist then
+                dist = d
+                closest = enemy
+            end
+        end
     end
-
-    if _G.ESPShowDistance then
-        local distLabel = Instance.new("TextLabel", billboard)
-        distLabel.Size = UDim2.new(1, 0, 0.5, 0)
-        distLabel.Position = UDim2.new(0, 0, 0.5, 0)
-        distLabel.BackgroundTransparency = 1
-        distLabel.Text = distance and tostring(math.floor(distance)) .. "m" or "?"
-        distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-        distLabel.TextSize = 12
-        distLabel.Font = Enum.Font.SourceSans
-        distLabel.TextStrokeTransparency = 0.3
-        ESPLabels[name .. "_dist"] = distLabel
-    end
-
-    local highlight = target:FindFirstChild("ZenithHighlight")
-    if highlight then highlight:Destroy() end
-    highlight = Instance.new("Highlight")
-    highlight.Name = "ZenithHighlight"
-    highlight.FillColor = color
-    highlight.FillTransparency = 0.4
-    highlight.OutlineColor = color
-    highlight.OutlineTransparency = 0.2
-    highlight.Parent = target
-
-    ESPObjects[target] = {billboard = billboard, highlight = highlight}
-    return billboard
-end
-local function RemoveESP(target)
-    if ESPObjects[target] then
-        if ESPObjects[target].billboard then ESPObjects[target].billboard:Destroy() end
-        if ESPObjects[target].highlight then ESPObjects[target].highlight:Destroy() end
-        ESPObjects[target] = nil
-    end
-    local esp = target:FindFirstChild("ZenithESP")
-    if esp then esp:Destroy() end
-    local highlight = target:FindFirstChild("ZenithHighlight")
-    if highlight then highlight:Destroy() end
+    return closest
 end
 
-local function StartESP()
-    task.spawn(function()
-        local LocalPlayer = game.Players.LocalPlayer
-        while true do
-            task.wait(_G.ESPUpdateInterval or 0.3)
-            if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                continue
-            end
+local MainTab = Window:CreateTab("Main Farm", 4483362458)
+MainTab:CreateToggle({Name = "Auto Farm (Closest Mob)", CurrentValue = false, Callback = function(Value) AutoFarm = Value end})
+MainTab:CreateToggle({Name = "Mob Aura (Bring Mobs)", CurrentValue = false, Callback = function(Value) MobAura = Value end})
+MainTab:CreateSlider({Name = "Mob Aura Radius (Studs)", Range = {25, 75}, Increment = 5, CurrentValue = 50, Callback = function(Value) MobAuraRadius = Value end})
+MainTab:CreateToggle({Name = "Kill Aura (Auto Click)", CurrentValue = false, Callback = function(Value) KillAura = Value end})
 
-            local myPos = LocalPlayer.Character.HumanoidRootPart.Position
-            local maxDist = _G.ESPMaxDistance or 500
+local ItemTab = Window:CreateTab("Items & Chests", 4483362458)
+ItemTab:CreateToggle({Name = "Auto Collect Fruits", CurrentValue = false, Callback = function(Value) AutoCollectFruits = Value end})
+ItemTab:CreateToggle({Name = "Auto Collect Chests", CurrentValue = false, Callback = function(Value) AutoCollectChests = Value end})
 
-            for obj, data in pairs(ESPObjects) do
-                if not obj or not obj.Parent then
-                    ESPObjects[obj] = nil
-                end
-            end
+local QuestTab = Window:CreateTab("Quests", 4483362458)
+QuestTab:CreateToggle({Name = "Auto Accept Quest (By Level & Sea)", CurrentValue = false, Callback = function(Value) AutoQuest = Value end})
 
-            if _G.ESP_Players then
-                for _, player in pairs(game.Players:GetPlayers()) do
-                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                        local distance = (player.Character.HumanoidRootPart.Position - myPos).Magnitude
-                        if distance <= maxDist then
-                            local color = _G.ESPPlayerColor or Color3.fromRGB(255, 50, 50)
-                            local teamColor = player.TeamColor and player.TeamColor.Color
-                            if teamColor and player.Team then
-                                color = teamColor
-                            end
-                            local name = _G.ESPShowName and player.Name or "Player"
-                            CreateESP(player.Character, color, name, distance)
-                        else
-                            RemoveESP(player.Character)
-                        end
-                    end
-                end
-            end
-
-            if _G.ESP_Chests or _G.ESP_Fruits then
-                pcall(function()
-                    for _, obj in pairs(workspace:GetChildren()) do
-                        if not obj or not obj.Parent then continue end
-                        local objPos = GetObjectPosition(obj)
-                        if not objPos then continue end
-                        local objNameLower = obj.Name:lower()
-                        local distance = (objPos - myPos).Magnitude
-                        if distance <= maxDist then
-                            local isChest = _G.ESP_Chests and (
-                                objNameLower:find("chest") or
-                                objNameLower:find("box") or
-                                objNameLower:find("crate") or
-                                objNameLower:find("supply")
-                            )
-                            local isFruit = _G.ESP_Fruits and (
-                                objNameLower:find("fruit") or
-                                objNameLower:find("devil") or
-                                objNameLower:find("dragon") or
-                                objNameLower:find("venom") or
-                                objNameLower:find("buddha") or
-                                obj:FindFirstChild("Handle") or
-                                obj:FindFirstChild("Fruit")
-                            )
-                            if isChest then
-                                CreateESP(obj, _G.ESPChestColor or Color3.fromRGB(255, 215, 0), "📦 " .. obj.Name, distance)
-                            elseif isFruit then
-                                CreateESP(obj, _G.ESPFruitColor or Color3.fromRGB(200, 50, 255), "🍎 " .. obj.Name, distance)
-                            else
-                                RemoveESP(obj)
-                            end
-                        else
-                            RemoveESP(obj)
-                        end
-                    end
-                end)
-            end
-        end
-    end)
-end
-local function StartCombatSystem()
-    local LocalPlayer = game.Players.LocalPlayer
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local LastAttackTime = 0
-
-    local function AutoEquip()
-        if LocalPlayer.Character then
-            local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-            if not tool then
-                for _, item in pairs(LocalPlayer.Backpack:GetChildren()) do
-                    if item:IsA("Tool") then
-                        if item.ToolTip == _G.WeaponType or item.Name:lower():find(_G.WeaponType:lower()) or _G.WeaponType == "Melee" then
-                            LocalPlayer.Character.Humanoid:EquipTool(item)
-                            break
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local function Attack()
-        AutoEquip()
-        if LocalPlayer.Character then
-            local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
-            if tool then
-                if _G.FastAttack then
-                    local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
-                    if humanoid then
-                        local animator = humanoid:FindFirstChild("Animator")
-                        if animator then
-                            for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-                                track:Stop()
-                            end
-                        end
-                    end
-                end
-                tool:Activate()
-                pcall(function()
-                    local net = ReplicatedStorage:FindFirstChild("Modules") and ReplicatedStorage.Modules:FindFirstChild("Net")
-                    if net and net:FindFirstChild("RE/RegisterAttack") then
-                        net["RE/RegisterAttack"]:FireServer()
-                    end
-                end)
-            end
-        end
-    end
-
-    local function SmartAttack()
-        local currentTime = tick()
-        if currentTime - LastAttackTime < (_G.AttackSpeed or 0.08) then return end
-        LastAttackTime = currentTime
-        if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
-
-        local myPos = LocalPlayer.Character.HumanoidRootPart.Position
-        local targets = {}
-
-        if _G.MobAura then
-            local enemyFolders = {"Enemies", "Monsters", "Mobs", "NPCs"}
-            for _, folderName in ipairs(enemyFolders) do
-                local folder = workspace:FindFirstChild(folderName)
-                if folder then
-                    for _, enemy in pairs(folder:GetChildren()) do
-                        if enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") then
-                            local dist = (enemy.HumanoidRootPart.Position - myPos).Magnitude
-                            if dist <= _G.AuraDistance then
-                                table.insert(targets, {Object = enemy, Distance = dist})
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        if _G.KillAura then
-            local myClan = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Clan") and LocalPlayer.Data.Clan.Value
-            for _, player in pairs(game.Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    local targetClan = player:FindFirstChild("Data") and player.Data:FindFirstChild("Clan") and player.Data.Clan.Value
-                    local isSameClan = (myClan and targetClan and myClan ~= "" and myClan == targetClan)
-                    if not isSameClan and player.Character.Humanoid.Health > 0 then
-                        local dist = (player.Character.HumanoidRootPart.Position - myPos).Magnitude
-                        if dist <= _G.AuraDistance then
-                            table.insert(targets, {Object = player.Character, Distance = dist})
-                        end
-                    end
-                end
-            end
-        end
-
-        if #targets > 0 then
-            table.sort(targets, function(a, b) return a.Distance < b.Distance end)
-            local target = targets[1]
-            local targetPos = target.Object.HumanoidRootPart.Position
-            FastTP(CFrame.new(targetPos + Vector3.new(0, 0, 3)))
-            Attack()
-        end
-    end
-
-    task.spawn(function()
-        while true do
-            task.wait(0.01)
-            if (_G.MobAura or _G.KillAura) and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                pcall(SmartAttack)
-            end
-        end
-    end)
-
-    local function GetQuestByLevel()
-        local level = 1
-        pcall(function() level = LocalPlayer.Data.Level.Value end)
-
-        if level >= 1 and level < 10 then
-            return "BanditQuest1", 1, "Bandit", CFrame.new(1060, 16, 1548), CFrame.new(1145, 17, 1634)
-        elseif level >= 10 and level < 15 then
-            return "JungleQuest", 1, "Monkey", CFrame.new(-1600, 37, 153), CFrame.new(-1620, 37, 140)
-        elseif level >= 15 and level < 30 then
-            return "JungleQuest", 2, "Gorilla", CFrame.new(-1600, 37, 153), CFrame.new(-1240, 6, -490)
-        elseif level >= 30 and level < 40 then
-            return "PirateQuest", 1, "Pirate", CFrame.new(-1140, 4, 3828), CFrame.new(-1215, 4, 3915)
-        elseif level >= 40 and level < 60 then
-            return "PirateQuest", 2, "Brute", CFrame.new(-1140, 4, 3828), CFrame.new(-1145, 14, 4300)
-        elseif level >= 60 and level < 90 then
-            return "DesertQuest", 1, "Desert Bandit", CFrame.new(896, 6, 4390), CFrame.new(930, 6, 4480)
-        elseif level >= 90 and level < 100 then
-            return "DesertQuest", 2, "Desert Officer", CFrame.new(896, 6, 4390), CFrame.new(1580, 6, 4370)
-        elseif level >= 100 and level < 120 then
-            return "SnowQuest", 1, "Snow Bandit", CFrame.new(1385, 87, -1298), CFrame.new(1280, 105, -1430)
-        elseif level >= 120 and level < 150 then
-            return "SnowQuest", 2, "Snow Commander", CFrame.new(1385, 87, -1298), CFrame.new(1320, 87, -1550)
-        elseif level >= 150 and level < 190 then
-            return "PrisonQuest", 1, "Prisoner", CFrame.new(4850, 5, 730), CFrame.new(5000, 5, 780)
-        elseif level >= 190 and level < 230 then
-            return "PrisonQuest", 2, "Prisoner 2", CFrame.new(4850, 5, 730), CFrame.new(5100, 5, 850)
-        elseif level >= 230 and level < 300 then
-            return "MagmaQuest", 1, "Magma Ninja", CFrame.new(5100, 5, 900), CFrame.new(5200, 5, 950)
-        elseif level >= 300 and level < 350 then
-            return "MagmaQuest", 2, "Magma Ninja 2", CFrame.new(5100, 5, 900), CFrame.new(5300, 5, 1000)
-        elseif level >= 350 and level < 400 then
-            return "FishmanQuest", 1, "Fishman", CFrame.new(6100, 5, 1500), CFrame.new(6200, 5, 1550)
-        elseif level >= 400 and level < 450 then
-            return "FishmanQuest", 2, "Fishman 2", CFrame.new(6100, 5, 1500), CFrame.new(6300, 5, 1600)
-        elseif level >= 450 and level < 500 then
-            return "SkyQuest", 1, "Sky Bandit", CFrame.new(-4850, 750, 850), CFrame.new(-4900, 750, 900)
-        elseif level >= 500 and level < 550 then
-            return "SkyQuest", 2, "Sky Bandit 2", CFrame.new(-4850, 750, 850), CFrame.new(-4950, 750, 950)
-        elseif level >= 550 and level < 625 then
-            return "ColosseumQuest", 1, "Colosseum Warrior", CFrame.new(-1450, 15, 1000), CFrame.new(-1500, 15, 1050)
-        elseif level >= 625 and level < 700 then
-            return "ColosseumQuest", 2, "Colosseum Warrior 2", CFrame.new(-1450, 15, 1000), CFrame.new(-1550, 15, 1100)
-        elseif level >= 700 and level < 800 then
-            return "RoseQuest", 1, "Rose Soldier", CFrame.new(-380, 73, 298), CFrame.new(-400, 73, 350)
-        elseif level >= 800 and level < 875 then
-            return "RoseQuest", 2, "Rose Soldier 2", CFrame.new(-380, 73, 298), CFrame.new(-420, 73, 380)
-        elseif level >= 875 and level < 950 then
-            return "PirateIslandQuest", 1, "Pirate Island Soldier", CFrame.new(380, 73, 298), CFrame.new(400, 73, 350)
-        elseif level >= 950 and level < 1025 then
-            return "PirateIslandQuest", 2, "Pirate Island Soldier 2", CFrame.new(380, 73, 298), CFrame.new(420, 73, 380)
-        elseif level >= 1025 and level < 1100 then
-            return "MarineHQQuest", 1, "Marine Soldier", CFrame.new(-380, 73, 298), CFrame.new(-380, 73, 400)
-        elseif level >= 1100 and level < 1175 then
-            return "MarineHQQuest", 2, "Marine Soldier 2", CFrame.new(-380, 73, 298), CFrame.new(-380, 73, 420)
-        elseif level >= 1175 and level < 1250 then
-            return "GraveQuest", 1, "Grave Zombie", CFrame.new(-380, 73, 298), CFrame.new(-380, 73, 450)
-        elseif level >= 1250 and level < 1325 then
-            return "GraveQuest", 2, "Grave Zombie 2", CFrame.new(-380, 73, 298), CFrame.new(-380, 73, 470)
-        elseif level >= 1325 and level < 1400 then
-            return "DungeonQuest", 1, "Dungeon NPC", CFrame.new(-380, 73, 298), CFrame.new(-380, 73, 500)
-        elseif level >= 1400 and level < 1450 then
-            return "DungeonQuest", 2, "Dungeon NPC 2", CFrame.new(-380, 73, 298), CFrame.new(-380, 73, 520)
-        elseif level >= 1450 and level < 1550 then
-            return "TikiQuest", 1, "Tiki Warrior", CFrame.new(-12460, 375, -7540), CFrame.new(-12500, 375, -7580)
-        elseif level >= 1550 and level < 1650 then
-            return "TikiQuest", 2, "Tiki Warrior 2", CFrame.new(-12460, 375, -7540), CFrame.new(-12550, 375, -7620)
-        elseif level >= 1650 and level < 1750 then
-            return "CastleQuest", 1, "Castle Guard", CFrame.new(-12460, 375, -7540), CFrame.new(-12600, 375, -7660)
-        elseif level >= 1750 and level < 1850 then
-            return "CastleQuest", 2, "Castle Guard 2", CFrame.new(-12460, 375, -7540), CFrame.new(-12650, 375, -7700)
-        elseif level >= 1850 and level < 1950 then
-            return "PortQuest", 1, "Port Soldier", CFrame.new(-12460, 375, -7540), CFrame.new(-12700, 375, -7740)
-        elseif level >= 1950 and level < 2050 then
-            return "PortQuest", 2, "Port Soldier 2", CFrame.new(-12460, 375, -7540), CFrame.new(-12750, 375, -7780)
-        elseif level >= 2050 and level < 2150 then
-            return "HydraQuest", 1, "Hydra Warrior", CFrame.new(-12460, 375, -7540), CFrame.new(-12800, 375, -7820)
-        elseif level >= 2150 and level < 2250 then
-            return "HydraQuest", 2, "Hydra Warrior 2", CFrame.new(-12460, 375, -7540), CFrame.new(-12850, 375, -7860)
-        elseif level >= 2250 and level < 2350 then
-            return "GreatTreeQuest", 1, "Tree Guardian", CFrame.new(-12460, 375, -7540), CFrame.new(-12900, 375, -7900)
-        elseif level >= 2350 and level < 2450 then
-            return "GreatTreeQuest", 2, "Tree Guardian 2", CFrame.new(-12460, 375, -7540), CFrame.new(-12950, 375, -7940)
-        elseif level >= 2450 and level < 2550 then
-            return "SeaTreatsQuest", 1, "Sea Monster", CFrame.new(-12460, 375, -7540), CFrame.new(-13000, 375, -7980)
-        else
-            return "SeaTreatsQuest", 2, "Sea Monster 2", CFrame.new(-12460, 375, -7540), CFrame.new(-13050, 375, -8020)
-        end
-    end
-
-    task.spawn(function()
-        while true do
-            task.wait(0.01)
-            if _G.AutoFarm and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                pcall(function()
-                    local questTitle, questId, mobName, questCFrame, mobCFrame = GetQuestByLevel()
-                    local mainGui = LocalPlayer.PlayerGui:FindFirstChild("Main")
-                    local questFrame = mainGui and mainGui:FindFirstChild("Quest")
-                    local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
-                    if not (questFrame and questFrame.Visible) then
-                        FastTP(questCFrame)
-                        task.wait(0.3)
-                        CommF:InvokeServer("StartQuest", questTitle, questId)
-                    else
-                        local mobFound = false
-                        if workspace:FindFirstChild("Enemies") then
-                            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
-                                if enemy.Name == mobName and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                                    mobFound = true
-                                    FastTP(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3))
-                                    if _G.FastAttack then Attack() end
-                                    break
-                                end
-                            end
-                        end
-                        if not mobFound then
-                            FastTP(mobCFrame)
-                        end
-                    end
-                end)
-            end
-        end
-    end)
-end
-local function StartFlySystem()
-    local LocalPlayer = game.Players.LocalPlayer
-    local FlyControls = {Forward = false, Backward = false, Left = false, Right = false, Up = false, Down = false}
-    local Keybinds = {
-        Fly = Enum.KeyCode.F,
-        Forward = Enum.KeyCode.W,
-        Backward = Enum.KeyCode.S,
-        Left = Enum.KeyCode.A,
-        Right = Enum.KeyCode.D,
-        Up = Enum.KeyCode.E,
-        Down = Enum.KeyCode.Q
-    }
-    local UserInputService = game:GetService("UserInputService")
-
-    UserInputService.InputBegan:Connect(function(input, processed)
-        if processed then return end
-        local key = input.KeyCode
-        if key == Keybinds.Fly then
-            _G.Fly = not _G.Fly
-            if not _G.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                LocalPlayer.Character.Humanoid.PlatformStand = false
-            end
-            return
-        end
-        if not _G.Fly then return end
-        if key == Keybinds.Forward then FlyControls.Forward = true end
-        if key == Keybinds.Backward then FlyControls.Backward = true end
-        if key == Keybinds.Left then FlyControls.Left = true end
-        if key == Keybinds.Right then FlyControls.Right = true end
-        if key == Keybinds.Up then FlyControls.Up = true end
-        if key == Keybinds.Down then FlyControls.Down = true end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input, processed)
-        if processed then return end
-        local key = input.KeyCode
-        if not _G.Fly then return end
-        if key == Keybinds.Forward then FlyControls.Forward = false end
-        if key == Keybinds.Backward then FlyControls.Backward = false end
-        if key == Keybinds.Left then FlyControls.Left = false end
-        if key == Keybinds.Right then FlyControls.Right = false end
-        if key == Keybinds.Up then FlyControls.Up = false end
-        if key == Keybinds.Down then FlyControls.Down = false end
-    end)
-
-    task.spawn(function()
-        while true do
-            task.wait(0.01)
-            if not _G.Fly or not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                task.wait(0.1)
-                continue
-            end
-            pcall(function()
-                local hrp = LocalPlayer.Character.HumanoidRootPart
-                local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
-                if humanoid then humanoid.PlatformStand = true end
-                local camera = workspace.CurrentCamera
-                local moveVector = Vector3.new(0, 0, 0)
-                local forward = camera.CFrame.LookVector
-                local right = camera.CFrame.RightVector
-                if FlyControls.Forward then moveVector = moveVector + forward end
-                if FlyControls.Backward then moveVector = moveVector - forward end
-                if FlyControls.Left then moveVector = moveVector - right end
-                if FlyControls.Right then moveVector = moveVector + right end
-                if FlyControls.Up then moveVector = moveVector + Vector3.new(0, 1, 0) end
-                if FlyControls.Down then moveVector = moveVector - Vector3.new(0, 1, 0) end
-                local speed = _G.FlySpeed or 2
-                if moveVector.Magnitude > 0 then moveVector = moveVector.Unit * speed end
-                local targetPos = hrp.Position + moveVector
-                hrp.CFrame = CFrame.new(targetPos)
-                hrp.Velocity = Vector3.new(0, 0, 0)
-            end)
-        end
-    end)
-end
-
-local function StartClickTP()
-    local LocalPlayer = game.Players.LocalPlayer
-    local Mouse = LocalPlayer:GetMouse()
-    Mouse.Button1Down:Connect(function()
-        if _G.ClickTP and Mouse.Hit and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            FastTP(CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0)))
-        end
-    end)
-end
-local function CreateMainGUI()
-    local MainGui = Instance.new("ScreenGui")
-    MainGui.Name = "ZenithHubV13"
-    MainGui.ResetOnSpawn = false
-    MainGui.Parent = game.CoreGui
-
-    local MainFrame = Instance.new("Frame", MainGui)
-    MainFrame.Size = UDim2.new(0, 480, 0, 450)
-    MainFrame.Position = UDim2.new(0.5, -240, 0.5, -225)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    MainFrame.Active = true
-
-    local OpenBtn = Instance.new("TextButton", MainGui)
-    OpenBtn.Size = UDim2.new(0, 50, 0, 50)
-    OpenBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
-    OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 180)
-    OpenBtn.Text = "Z"
-    OpenBtn.TextColor3 = Color3.fromRGB(15, 15, 20)
-    OpenBtn.TextSize = 24
-    OpenBtn.Font = Enum.Font.SourceSansBold
-    OpenBtn.Active = true
-    OpenBtn.Draggable = true
-
-    local UICorner = Instance.new("UICorner", OpenBtn)
-    UICorner.CornerRadius = UDim.new(1, 0)
-
-    OpenBtn.MouseButton1Click:Connect(function()
-        MainFrame.Visible = not MainFrame.Visible
-    end)
-
-    local UserInputService = game:GetService("UserInputService")
-    local dragging, dragInput, dragStart, startPos
-
-    MainFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
-        end
-    end)
-
-    MainFrame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    local Title = Instance.new("TextLabel", MainFrame)
-    Title.Size = UDim2.new(1, 0, 0, 35)
-    Title.Text = "Zenith Hub V1.3 | Advanced ESP & Fast Attack"
-    Title.TextColor3 = Color3.fromRGB(0, 255, 180)
-    Title.TextSize = 14
-    Title.Font = Enum.Font.SourceSansBold
-    Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-
-    local Scroll = Instance.new("ScrollingFrame", MainFrame)
-    Scroll.Size = UDim2.new(1, -10, 1, -45)
-    Scroll.Position = UDim2.new(0, 5, 0, 40)
-    Scroll.BackgroundTransparency = 1
-    Scroll.CanvasSize = UDim2.new(0, 0, 0, 1100)
-    Scroll.ScrollBarThickness = 5
-
-    local UIList = Instance.new("UIListLayout", Scroll)
-    UIList.SortOrder = Enum.SortOrder.LayoutOrder
-    UIList.Padding = UDim.new(0, 8)
-
-    local WeaponsList = {"Melee", "Sword", "Blox Fruit", "Gun"}
-    local CurrentWeaponIndex = 1
-
-    local WeaponBtn = Instance.new("TextButton", Scroll)
-    WeaponBtn.Size = UDim2.new(1, -10, 0, 35)
-    WeaponBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-    WeaponBtn.Text = "Selected Weapon: Melee"
-    WeaponBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
-    WeaponBtn.Font = Enum.Font.SourceSansBold
-    WeaponBtn.TextSize = 14
-
-    WeaponBtn.MouseButton1Click:Connect(function()
-        CurrentWeaponIndex = (CurrentWeaponIndex % #WeaponsList) + 1
-        _G.WeaponType = WeaponsList[CurrentWeaponIndex]
-        WeaponBtn.Text = "Selected Weapon: " .. _G.WeaponType
-    end)
-
-    local function CreateToggle(name, globalVar)
-        local Btn = Instance.new("TextButton", Scroll)
-        Btn.Size = UDim2.new(1, -10, 0, 35)
-        Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-        Btn.Text = name .. ": OFF"
-        Btn.TextColor3 = Color3.fromRGB(255, 80, 80)
-        Btn.Font = Enum.Font.SourceSansBold
-        Btn.TextSize = 14
-
-        Btn.MouseButton1Click:Connect(function()
-            _G[globalVar] = not _G[globalVar]
-            if _G[globalVar] then
-                Btn.Text = name .. ": ON"
-                Btn.TextColor3 = Color3.fromRGB(80, 255, 120)
-            else
-                Btn.Text = name .. ": OFF"
-                Btn.TextColor3 = Color3.fromRGB(255, 80, 80)
-            end
-        end)
-    end
-
-    CreateToggle("Auto Farm Level", "AutoFarm")
-    CreateToggle("Fast Attack Engine", "FastAttack")
-    CreateToggle("Mob Aura", "MobAura")
-    CreateToggle("Kill Aura (PvP Safe)", "KillAura")
-    CreateToggle("CFrame Fly Hack", "Fly")
-    CreateToggle("Click TP", "ClickTP")
-    CreateToggle("ESP Players", "ESP_Players")
-    CreateToggle("ESP Chests", "ESP_Chests")
-    CreateToggle("ESP Devil Fruits", "ESP_Fruits")
-        local SpeedSliderFrame = Instance.new("Frame", Scroll)
-    SpeedSliderFrame.Size = UDim2.new(1, -10, 0, 50)
-    SpeedSliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-
-    local SpeedSliderTitle = Instance.new("TextLabel", SpeedSliderFrame)
-    SpeedSliderTitle.Size = UDim2.new(1, 0, 0, 20)
-    SpeedSliderTitle.Text = "Attack Speed: 0.08 sec"
-    SpeedSliderTitle.TextColor3 = Color3.fromRGB(255, 200, 100)
-    SpeedSliderTitle.Font = Enum.Font.SourceSansBold
-    SpeedSliderTitle.TextSize = 13
-    SpeedSliderTitle.BackgroundTransparency = 1
-
-    local SpeedTrack = Instance.new("Frame", SpeedSliderFrame)
-    SpeedTrack.Size = UDim2.new(0.9, 0, 0, 8)
-    SpeedTrack.Position = UDim2.new(0.05, 0, 0.65, 0)
-    SpeedTrack.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-
-    local SpeedFill = Instance.new("Frame", SpeedTrack)
-    SpeedFill.Size = UDim2.new((_G.AttackSpeed - 0.01) / 0.29, 0, 1, 0)
-    SpeedFill.BackgroundColor3 = Color3.fromRGB(255, 200, 100)
-
-    local SpeedSliderBtn = Instance.new("TextButton", SpeedTrack)
-    SpeedSliderBtn.Size = UDim2.new(1, 0, 1, 0)
-    SpeedSliderBtn.BackgroundTransparency = 1
-    SpeedSliderBtn.Text = ""
-
-    local isSpeedSliding = false
-    local function UpdateSpeedSlider(input)
-        local pos = math.clamp((input.Position.X - SpeedTrack.AbsolutePosition.X) / SpeedTrack.AbsoluteSize.X, 0, 1)
-        SpeedFill.Size = UDim2.new(pos, 0, 1, 0)
-        local val = 0.01 + (pos * 0.29)
-        _G.AttackSpeed = math.floor(val * 1000) / 1000
-        SpeedSliderTitle.Text = "Attack Speed: " .. string.format("%.3f", _G.AttackSpeed) .. " sec"
-    end
-
-    SpeedSliderBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isSpeedSliding = true
-            UpdateSpeedSlider(input)
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if isSpeedSliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            UpdateSpeedSlider(input)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isSpeedSliding = false
-        end
-    end)
-
-    local SliderFrame = Instance.new("Frame", Scroll)
-    SliderFrame.Size = UDim2.new(1, -10, 0, 50)
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-
-    local SliderTitle = Instance.new("TextLabel", SliderFrame)
-    SliderTitle.Size = UDim2.new(1, 0, 0, 20)
-    SliderTitle.Text = "Aura Distance: 50 studs"
-    SliderTitle.TextColor3 = Color3.fromRGB(0, 255, 180)
-    SliderTitle.Font = Enum.Font.SourceSansBold
-    SliderTitle.TextSize = 13
-    SliderTitle.BackgroundTransparency = 1
-
-    local Track = Instance.new("Frame", SliderFrame)
-    Track.Size = UDim2.new(0.9, 0, 0, 8)
-    Track.Position = UDim2.new(0.05, 0, 0.65, 0)
-    Track.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-
-    local Fill = Instance.new("Frame", Track)
-    Fill.Size = UDim2.new(0.5, 0, 1, 0)
-    Fill.BackgroundColor3 = Color3.fromRGB(0, 255, 180)
-
-    local SliderBtn = Instance.new("TextButton", Track)
-    SliderBtn.Size = UDim2.new(1, 0, 1, 0)
-    SliderBtn.BackgroundTransparency = 1
-    SliderBtn.Text = ""
-
-    local isSliding = false
-    local function UpdateSlider(input)
-        local pos = math.clamp((input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
-        Fill.Size = UDim2.new(pos, 0, 1, 0)
-        local val = math.floor(25 + (pos * 50))
-        _G.AuraDistance = val
-        SliderTitle.Text = "Aura Distance: " .. tostring(val) .. " studs"
-    end
-
-    SliderBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isSliding = true
-            UpdateSlider(input)
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if isSliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            UpdateSlider(input)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isSliding = false
-        end
-    end)
-
-    local TPHeader = Instance.new("TextLabel", Scroll)
-    TPHeader.Size = UDim2.new(1, -10, 0, 25)
-    TPHeader.Text = "-- Island Teleports --"
-    TPHeader.TextColor3 = Color3.fromRGB(0, 255, 180)
-    TPHeader.Font = Enum.Font.SourceSansBold
-    TPHeader.BackgroundTransparency = 1
-
-    local Islands = {
-        {"Starter Island", Vector3.new(1095, 16, 1420)},
-        {"Jungle", Vector3.new(-1612, 36, 148)},
-        {"Pirate Village", Vector3.new(-1145, 4, 3830)},
-        {"Desert", Vector3.new(895, 6, 4390)},
-        {"Middle Town", Vector3.new(-690, 15, 1580)},
-        {"Frozen Village", Vector3.new(1150, 26, -1425)},
-        {"Marine Fortress", Vector3.new(-5042, 73, 4323)},
-        {"Prison", Vector3.new(4850, 5, 730)},
-        {"Cafe (Sea 2)", Vector3.new(-380, 73, 298)},
-        {"Mansion (Sea 3)", Vector3.new(-12460, 375, -7540)}
-    }
-
-    for _, item in ipairs(Islands) do
-        local islandName = item[1]
-        local coords = item[2]
-        local TpBtn = Instance.new("TextButton", Scroll)
-        TpBtn.Size = UDim2.new(1, -10, 0, 32)
-        TpBtn.BackgroundColor3 = Color3.fromRGB(40, 50, 65)
-        TpBtn.Text = "TP To: " .. islandName
-        TpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TpBtn.Font = Enum.Font.SourceSansBold
-        TpBtn.TextSize = 13
-        TpBtn.MouseButton1Click:Connect(function()
-            FastTP(CFrame.new(coords))
-        end)
-    end
-
-    StartESP()
-    StartCombatSystem()
-    StartFlySystem()
-    StartClickTP()
-end
-
-SubmitBtn.MouseButton1Click:Connect(function()
-    local cleanKey = string.match(KeyInput.Text, "^%s*(.-)%s*$")
-    if cleanKey == CorrectKey then
-        KeyScreen:Destroy()
-        CreateMainGUI()
+local TravelTab = Window:CreateTab("Movement / Fly", 4483362458)
+TravelTab:CreateSlider({Name = "Fly Speed", Range = {50, 300}, Increment = 10, CurrentValue = 150, Callback = function(Value) FlySpeed = Value end})
+TravelTab:CreateToggle({Name = "Toggle Flight", CurrentValue = false, Callback = function(Value)
+    IsFlying = Value
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+    if IsFlying then
+        FlyBodyVel = Instance.new("BodyVelocity")
+        FlyBodyVel.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+        FlyBodyVel.Velocity = Vector3.zero
+        FlyBodyVel.Parent = hrp
+        FlyBodyGyro = Instance.new("BodyGyro")
+        FlyBodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+        FlyBodyGyro.CFrame = hrp.CFrame
+        FlyBodyGyro.Parent = hrp
     else
-        KeyInput.Text = ""
-        KeyInput.PlaceholderText = "Wrong Key!"
+        if FlyBodyVel then FlyBodyVel:Destroy() end
+        if FlyBodyGyro then FlyBodyGyro:Destroy() end
+    end
+end})
+TravelTab:CreateButton({Name = "Tween to Sea 2 NPC", Callback = function() pcall(function() ReplicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa") end) end})
+TravelTab:CreateButton({Name = "Tween to Sea 3 NPC", Callback = function() pcall(function() ReplicatedStorage.Remotes.CommF_:InvokeServer("TravelZou") end) end})
+RunService.RenderStepped:Connect(function()
+    if IsFlying and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = LocalPlayer.Character.HumanoidRootPart
+        local cam = workspace.CurrentCamera
+        FlyBodyGyro.CFrame = cam.CFrame
+        FlyBodyVel.Velocity = cam.CFrame.LookVector * FlySpeed
     end
 end)
 
-print("Zenith Hub V1.3 Loaded Successfully!")
-print("Key: Eclipse | Fly Controls: F + WASD + E/Q")
-print("Support all levels up to 2550+")
+task.spawn(function()
+    while task.wait(0.1) do
+        if AutoFarm then
+            pcall(function()
+                local enemy = getClosestEnemy()
+                if enemy and enemy:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.05) do
+        if KillAura or AutoFarm then
+            pcall(function()
+                VirtualUser:Button1Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                task.wait(0.02)
+                VirtualUser:Button1Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.2) do
+        if MobAura then
+            pcall(function()
+                local enemies = workspace:FindFirstChild("Enemies")
+                local char = LocalPlayer.Character
+                if enemies and char and char:FindFirstChild("HumanoidRootPart") then
+                    local hrp = char.HumanoidRootPart
+                    for _, enemy in pairs(enemies:GetChildren()) do
+                        local enemyHrp = enemy:FindFirstChild("HumanoidRootPart")
+                        local enemyHum = enemy:FindFirstChild("Humanoid")
+                        if enemyHrp and enemyHum and enemyHum.Health > 0 then
+                            local distance = (hrp.Position - enemyHrp.Position).Magnitude
+                            if distance <= MobAuraRadius then
+                                enemyHrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -3)
+                                enemyHrp.CanCollide = false
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(1) do
+        if AutoCollectFruits then
+            pcall(function()
+                for _, obj in pairs(workspace:GetChildren()) do
+                    if string.find(obj.Name, "Fruit") and (obj:IsA("Tool") or obj:IsA("Model")) then
+                        local handle = obj:FindFirstChild("Handle") or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                        if handle then
+                            local char = LocalPlayer.Character
+                            if char and char:FindFirstChild("HumanoidRootPart") then
+                                char.HumanoidRootPart.CFrame = handle.CFrame
+                                task.wait(0.5)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if AutoCollectChests then
+            pcall(function()
+                for _, obj in pairs(workspace:GetChildren()) do
+                    if string.find(obj.Name, "Chest") then
+                        local chestPart = obj:FindFirstChildWhichIsA("BasePart")
+                        if chestPart then
+                            local char = LocalPlayer.Character
+                            if char and char:FindFirstChild("HumanoidRootPart") then
+                                char.HumanoidRootPart.CFrame = chestPart.CFrame
+                                task.wait(0.3)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(5) do
+        if AutoQuest then
+            pcall(function()
+                local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+                if playerGui then
+                    local mainGui = playerGui:FindFirstChild("Main")
+                    local activeQuest = mainGui and mainGui:FindFirstChild("Quest") and mainGui.Quest.Visible
+                    if not activeQuest then
+                        local bestQuest = getBestQuestForPlayer()
+                        if bestQuest then
+                            acceptQuest(bestQuest.QuestName, bestQuest.LevelReq)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
