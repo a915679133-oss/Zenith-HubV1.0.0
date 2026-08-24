@@ -30,8 +30,8 @@ BtnIcon.TextSize = 24
 BtnIcon.Parent = ToggleMenuBtn
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 520, 0, 380)
-MainFrame.Position = UDim2.new(0.5, -260, 0.5, -190)
+MainFrame.Size = UDim2.new(0, 520, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -260, 0.5, -210)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -99,7 +99,7 @@ local function createTab(name)
     ContentFrame.Size = UDim2.new(1, -20, 1, -90)
     ContentFrame.Position = UDim2.new(0, 10, 0, 85)
     ContentFrame.BackgroundTransparency = 1
-    ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
+    ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 650)
     ContentFrame.ScrollBarThickness = 6
     ContentFrame.Visible = false
     ContentFrame.Parent = MainFrame
@@ -118,9 +118,7 @@ local function createTab(name)
     end
     
     tabBtn.MouseButton1Click:Connect(function()
-        for _, frame in pairs(TabsContent) do
-            frame.Visible = false
-        end
+        for _, frame in pairs(TabsContent) do frame.Visible = false end
         for _, btn in pairs(TabButtonContainer:GetChildren()) do
             if btn:IsA("TextButton") then
                 btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
@@ -139,6 +137,61 @@ local TabFarm = createTab("Farm")
 local TabItems = createTab("Items")
 local TabTeleports = createTab("Teleports")
 local TabESP = createTab("ESP & Fly")
+
+local SelectedWeapon = "Melee"
+
+local function createWeaponSelector(tab)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 45)
+    frame.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
+    frame.Parent = tab
+    
+    local c = Instance.new("UICorner", frame)
+    c.CornerRadius = UDim.new(0, 6)
+    
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, 0, 0, 18)
+    label.BackgroundTransparency = 1
+    label.Text = "Select Weapon Type:"
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.TextSize = 12
+    label.Font = Enum.Font.SourceSansBold
+    
+    local btnContainer = Instance.new("Frame", frame)
+    btnContainer.Size = UDim2.new(1, -10, 0, 22)
+    btnContainer.Position = UDim2.new(0, 5, 0, 18)
+    btnContainer.BackgroundTransparency = 1
+    
+    local layout = Instance.new("UIListLayout", btnContainer)
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.Padding = UDim.new(0, 4)
+    
+    local weapons = {"Melee", "Sword", "Blox Fruit", "Gun"}
+    local btns = {}
+    
+    for _, w in ipairs(weapons) do
+        local b = Instance.new("TextButton", btnContainer)
+        b.Size = UDim2.new(0.24, 0, 1, 0)
+        b.BackgroundColor3 = (w == SelectedWeapon) and Color3.fromRGB(0, 120, 215) or Color3.fromRGB(40, 40, 50)
+        b.Text = w
+        b.TextColor3 = Color3.fromRGB(255, 255, 255)
+        b.TextSize = 11
+        b.Font = Enum.Font.SourceSansBold
+        
+        local corner = Instance.new("UICorner", b)
+        corner.CornerRadius = UDim.new(0, 4)
+        btns[w] = b
+        
+        b.MouseButton1Click:Connect(function()
+            SelectedWeapon = w
+            for name, button in pairs(btns) do
+                button.BackgroundColor3 = (name == SelectedWeapon) and Color3.fromRGB(0, 120, 215) or Color3.fromRGB(40, 40, 50)
+            end
+        end)
+    end
+end
+
+createWeaponSelector(TabFarm)
 
 local function createToggle(tab, name, callback)
     local btn = Instance.new("TextButton")
@@ -184,7 +237,7 @@ local AutoQuest = false
 local AutoFarm = false
 local MobAura = false
 local KillAura = false
-local MobAuraRadius = 50
+local MobAuraRadius = 60
 local AutoCollectFruits = false
 local AutoCollectChests = false
 local ESPEnabled = false
@@ -211,6 +264,30 @@ RunService.RenderStepped:Connect(function()
         end
     end)
 end)
+local function equipSelectedWeapon()
+    pcall(function()
+        local char = LocalPlayer.Character
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        if not char or not backpack then return end
+        
+        local heldTool = char:FindFirstChildOfClass("Tool")
+        if heldTool and heldTool:FindFirstChild("ToolTip") and heldTool.ToolTip == SelectedWeapon then
+            return
+        end
+        
+        for _, tool in pairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                if tool:FindFirstChild("ToolTip") and tool.ToolTip == SelectedWeapon then
+                    char.Humanoid:EquipTool(tool)
+                    break
+                elseif SelectedWeapon == "Melee" and tool.ToolTip == "Melee" then
+                    char.Humanoid:EquipTool(tool)
+                    break
+                end
+            end
+        end
+    end)
+end
 
 local function tweenTo(targetCFrame, customSpeed)
     local char = LocalPlayer.Character
@@ -313,21 +390,40 @@ local QuestsAllSeas = {
     }
 }
 
-local function getBestQuestForPlayer()
+local function isMobSpawned(mobName)
+    local enemies = workspace:FindFirstChild("Enemies")
+    if not enemies then return false end
+    for _, enemy in pairs(enemies:GetChildren()) do
+        if string.find(enemy.Name, mobName) then
+            local hum = enemy:FindFirstChild("Humanoid")
+            if hum and hum.Health > 0 then return true end
+        end
+    end
+    return false
+end
+
+local function getBestAvailableQuest()
     local currentSea = getCurrentSea()
     local seaTable = QuestsAllSeas[currentSea]
     if not seaTable then return nil end
-    local bestMatch = nil
+    
+    local eligibleQuests = {}
     for _, q in ipairs(seaTable) do
         if CurrentLevel >= q.Min then
-            bestMatch = q
+            table.insert(eligibleQuests, q)
         end
     end
-    return bestMatch
+    
+    for i = #eligibleQuests, 1, -1 do
+        local q = eligibleQuests[i]
+        if isMobSpawned(q.MobName) then return q end
+    end
+    
+    return eligibleQuests[#eligibleQuests]
 end
 
 local function getQuestMobForFarm()
-    local q = getBestQuestForPlayer()
+    local q = getBestAvailableQuest()
     return q and q.MobName or nil
 end
 
@@ -352,17 +448,12 @@ end
 createToggle(TabFarm, "Auto Farm", function(v) AutoFarm = v end)
 createToggle(TabFarm, "Mob Aura", function(v) MobAura = v end)
 createToggle(TabFarm, "Kill Aura", function(v) KillAura = v end)
-createToggle(TabFarm, "Auto Quest", function(v) AutoQuest = v end)
 
 createToggle(TabItems, "Auto Collect Fruits", function(v) AutoCollectFruits = v end)
 createToggle(TabItems, "Auto Collect Chests", function(v) AutoCollectChests = v end)
 
-createButton(TabTeleports, "TP to Cafe (2 Sea)", function()
-    tweenTo(CFrame.new(-385.5, 73, 298.5), 300)
-end)
-createButton(TabTeleports, "TP to Mansion (3 Sea)", function()
-    tweenTo(CFrame.new(-12474, 332, -7552), 300)
-end)
+createButton(TabTeleports, "TP to Cafe (2 Sea)", function() tweenTo(CFrame.new(-385.5, 73, 298.5), 300) end)
+createButton(TabTeleports, "TP to Mansion (3 Sea)", function() tweenTo(CFrame.new(-12474, 332, -7552), 300) end)
 
 createToggle(TabESP, "ESP (Players & Fruits)", function(v) ESPEnabled = v end)
 createToggle(TabESP, "Toggle Flight", function(v)
@@ -393,9 +484,9 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- ESP цикл
 task.spawn(function()
     while task.wait(0.3) do
-        -- ESP для игроков
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 local char = p.Character
@@ -437,7 +528,6 @@ task.spawn(function()
             end
         end
 
-        -- ESP для фруктов с отображением названия
         for _, obj in pairs(workspace:GetChildren()) do
             if string.find(obj.Name, "Fruit") and (obj:IsA("Tool") or obj:IsA("Model")) then
                 local handle = obj:FindFirstChild("Handle") or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
@@ -473,16 +563,18 @@ task.spawn(function()
     end
 end)
 
+-- Авто фарм квестов и позиционирование
 task.spawn(function()
     while task.wait(0.1) do
         if AutoFarm then
             pcall(function()
+                equipSelectedWeapon()
                 local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
                 if playerGui then
                     local mainGui = playerGui:FindFirstChild("Main")
                     local activeQuest = mainGui and mainGui:FindFirstChild("Quest") and mainGui.Quest.Visible
                     if not activeQuest then
-                        local bestQuest = getBestQuestForPlayer()
+                        local bestQuest = getBestAvailableQuest()
                         if bestQuest then
                             acceptQuest(bestQuest.QuestName, bestQuest.LevelReq)
                         end
@@ -498,10 +590,12 @@ task.spawn(function()
     end
 end)
 
+-- Цикл атаки кликами
 task.spawn(function()
     while task.wait(0.05) do
-        if KillAura or AutoFarm then
+        if KillAura or AutoFarm or MobAura then
             pcall(function()
+                equipSelectedWeapon()
                 VirtualUser:Button1Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
                 task.wait(0.02)
                 VirtualUser:Button1Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
@@ -510,10 +604,12 @@ task.spawn(function()
     end
 end)
 
+-- Моб Аура
 task.spawn(function()
     while task.wait(0.2) do
         if MobAura then
             pcall(function()
+                equipSelectedWeapon()
                 local enemies = workspace:FindFirstChild("Enemies")
                 local char = LocalPlayer.Character
                 local targetMobName = getQuestMobForFarm()
@@ -538,6 +634,7 @@ task.spawn(function()
     end
 end)
 
+-- Авто-сбор фруктов
 task.spawn(function()
     while task.wait(1) do
         if AutoCollectFruits then
@@ -551,10 +648,8 @@ task.spawn(function()
                                 local hrp = char.HumanoidRootPart
                                 local savedPos = hrp.CFrame
                                 
-                                -- Телепортируемся к фрукту
                                 hrp.CFrame = handle.CFrame
                                 
-                                -- Ждем, пока фрукт реально исчезнет с карты
                                 local timeout = 0
                                 while obj and obj.Parent == workspace and timeout < 30 do
                                     task.wait(0.1)
@@ -564,7 +659,6 @@ task.spawn(function()
                                     end
                                 end
                                 
-                                -- Возвращаемся назад после подбора
                                 if savedPos then
                                     hrp.CFrame = savedPos
                                     task.spawn(function()
@@ -581,20 +675,27 @@ task.spawn(function()
     end
 end)
 
+-- Авто-сбор сундуков
 task.spawn(function()
     while task.wait(0.5) do
         if AutoCollectChests then
             pcall(function()
-                for _, obj in pairs(workspace:GetChildren()) do
-                    if string.find(obj.Name, "Chest") then
-                        local chestPart = obj:FindFirstChildWhichIsA("BasePart")
-                        if chestPart then
-                            local char = LocalPlayer.Character
-                            if char and char:FindFirstChild("HumanoidRootPart") then
-                                char.HumanoidRootPart.CFrame = chestPart.CFrame
-                                task.wait(0.3)
-                            end
+                local chests = {}
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if string.find(obj.Name, "Chest") and (obj:IsA("Model") or obj:IsA("BasePart")) then
+                        local part = obj:IsA("BasePart") and obj or obj:FindFirstChildWhichIsA("BasePart")
+                        if part then
+                            table.insert(chests, part)
                         end
+                    end
+                end
+                
+                for _, chestPart in ipairs(chests) do
+                    if not AutoCollectChests then break end
+                    local char = LocalPlayer.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") and chestPart and chestPart.Parent then
+                        char.HumanoidRootPart.CFrame = chestPart.CFrame
+                        task.wait(0.3)
                     end
                 end
             end)
