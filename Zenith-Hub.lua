@@ -1,28 +1,86 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-local Window = Rayfield:CreateWindow({
-   Name = "Zenith-Utility V1.1 | Blox Fruits",
-   LoadingTitle = "Zenith-Utility V1.1",
-   LoadingSubtitle = "by Artem",
-   ConfigurationSaving = { Enabled = false },
-   KeySystem = true,
-   KeySettings = {
-      Title = "Zenith-Utility V1.1 Auth",
-      Subtitle = "Введите ключ доступа",
-      Note = "Введите ключ: Eclipse",
-      FileName = "ZenithUtilityKeySave",
-      SaveKey = true,
-      GrabKeyFromSite = false,
-      Key = {"Eclipse"}
-   }
-})
-
-local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local VirtualUser = game:GetService("VirtualUser")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ZenithUtilityUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 480, 0, 360)
+MainFrame.Position = UDim2.new(0.5, -240, 0.5, -180)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner", MainFrame)
+UICorner.CornerRadius = UDim.new(0, 8)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 40)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = " Zenith-Utility V2.0 | Blox Fruits"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 18
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = MainFrame
+
+local ContentFrame = Instance.new("ScrollingFrame")
+ContentFrame.Size = UDim2.new(1, -20, 1, -60)
+ContentFrame.Position = UDim2.new(0, 10, 0, 50)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
+ContentFrame.ScrollBarThickness = 6
+ContentFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout", ContentFrame)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+
+local function createToggle(name, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.SourceSans
+    btn.Text = name .. ": OFF"
+    btn.Parent = ContentFrame
+    
+    local c = Instance.new("UICorner", btn)
+    c.CornerRadius = UDim.new(0, 6)
+    
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        btn.Text = name .. (state and ": ON" or ": OFF")
+        btn.BackgroundColor3 = state and Color3.fromRGB(0, 120, 215) or Color3.fromRGB(35, 35, 45)
+        callback(state)
+    end)
+end
+
+local function createButton(name, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.SourceSans
+    btn.Text = name
+    btn.Parent = ContentFrame
+    
+    local c = Instance.new("UICorner", btn)
+    c.CornerRadius = UDim.new(0, 6)
+    
+    btn.MouseButton1Click:Connect(callback)
+end
 
 local FlySpeed = 150
 local IsFlying = false
@@ -35,6 +93,18 @@ local AutoCollectFruits = false
 local AutoCollectChests = false
 local ESPEnabled = false
 local FlyBodyVel, FlyBodyGyro
+local CurrentLevel = 1
+
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            local data = LocalPlayer:FindFirstChild("Data")
+            if data and data:FindFirstChild("Level") then
+                CurrentLevel = data.Level.Value
+            end
+        end)
+    end
+end)
 
 local function tweenTo(targetCFrame, customSpeed)
     local char = LocalPlayer.Character
@@ -64,14 +134,9 @@ local function getCurrentSea()
     if placeId == 2753915549 then return 1
     elseif placeId == 4442272183 then return 2
     elseif placeId == 7449423635 then return 3 end
-    local data = LocalPlayer:FindFirstChild("Data")
-    if data and data:FindFirstChild("Level") then
-        local lvl = data.Level.Value
-        if lvl >= 1500 then return 3
-        elseif lvl >= 700 then return 2
-        else return 1 end
-    end
-    return 1
+    if CurrentLevel >= 1500 then return 3
+    elseif CurrentLevel >= 700 then return 2
+    else return 1 end
 end
 
 local QuestsAllSeas = {
@@ -108,8 +173,8 @@ local QuestsAllSeas = {
         {Min = 725, Max = 774, QuestName = "Area1Quest", LevelReq = 2},
         {Min = 775, Max = 799, QuestName = "Area2Quest", LevelReq = 1},
         {Min = 800, Max = 874, QuestName = "Area2Quest", LevelReq = 2},
-        {Min = 875, Max = 899, QuestName = "MarineQuest2", LevelReq = 1},
-        {Min = 900, Max = 949, QuestName = "MarineQuest2", LevelReq = 2},
+        {Min = 875, Max = 899, QuestName = "MarineQuest3", LevelReq = 1},
+        {Min = 900, Max = 949, QuestName = "MarineQuest3", LevelReq = 2},
         {Min = 950, Max = 974, QuestName = "FairyQuest", LevelReq = 1},
         {Min = 975, Max = 999, QuestName = "FairyQuest", LevelReq = 2},
         {Min = 1000, Max = 1049, QuestName = "IceSideQuest", LevelReq = 1},
@@ -146,14 +211,13 @@ local function getBestQuestForPlayer()
     local currentSea = getCurrentSea()
     local seaTable = QuestsAllSeas[currentSea]
     if not seaTable then return nil end
-    local data = LocalPlayer:FindFirstChild("Data")
-    if data and data:FindFirstChild("Level") then
-        local lvl = data.Level.Value
-        for _, q in ipairs(seaTable) do
-            if lvl >= q.Min and lvl <= q.Max then return q end
+    local bestMatch = nil
+    for _, q in ipairs(seaTable) do
+        if CurrentLevel >= q.Min then
+            bestMatch = q
         end
     end
-    return nil
+    return bestMatch
 end
 
 local function getClosestEnemy()
@@ -171,47 +235,24 @@ local function getClosestEnemy()
     return closest
 end
 
-local MainTab = Window:CreateTab("Main Farm", 4483362458)
-MainTab:CreateToggle({Name = "Auto Farm (Closest Mob)", CurrentValue = false, Callback = function(Value) AutoFarm = Value end})
-MainTab:CreateToggle({Name = "Mob Aura (Bring Mobs)", CurrentValue = false, Callback = function(Value) MobAura = Value end})
-MainTab:CreateSlider({Name = "Mob Aura Radius (Studs)", Range = {25, 75}, Increment = 5, CurrentValue = 50, Callback = function(Value) MobAuraRadius = Value end})
-MainTab:CreateToggle({Name = "Kill Aura (Auto Click)", CurrentValue = false, Callback = function(Value) KillAura = Value end})
+createToggle("Auto Farm", function(v) AutoFarm = v end)
+createToggle("Mob Aura", function(v) MobAura = v end)
+createToggle("Kill Aura", function(v) KillAura = v end)
+createToggle("Auto Collect Fruits", function(v) AutoCollectFruits = v end)
+createToggle("Auto Collect Chests", function(v) AutoCollectChests = v end)
+createToggle("Auto Quest", function(v) AutoQuest = v end)
+createToggle("ESP (Players & Fruits)", function(v) ESPEnabled = v end)
 
-local ItemTab = Window:CreateTab("Items & Chests", 4483362458)
-ItemTab:CreateToggle({Name = "Auto Collect Fruits", CurrentValue = false, Callback = function(Value) AutoCollectFruits = Value end})
-ItemTab:CreateToggle({Name = "Auto Collect Chests", CurrentValue = false, Callback = function(Value) AutoCollectChests = Value end})
+createButton("TP to Cafe (2 Sea)", function()
+    tweenTo(CFrame.new(-385.5, 73, 298.5), 300)
+end)
 
-local QuestTab = Window:CreateTab("Quests", 4483362458)
-QuestTab:CreateToggle({Name = "Auto Accept Quest (Fixed)", CurrentValue = false, Callback = function(Value) AutoQuest = Value end})
+createButton("TP to Mansion (3 Sea)", function()
+    tweenTo(CFrame.new(-12474, 332, -7552), 300)
+end)
 
-local ESPTab = Window:CreateTab("ESP", 4483362458)
-ESPTab:CreateToggle({Name = "Player & Fruit ESP", CurrentValue = false, Callback = function(Value)
-    ESPEnabled = Value
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
-            if p.Character:FindFirstChild("ZenithESP") then p.Character.ZenithESP:Destroy() end
-            if ESPEnabled then
-                local bg = Instance.new("Highlight", p.Character)
-                bg.Name = "ZenithESP"
-                bg.FillColor = Color3.fromRGB(255, 0, 0)
-                bg.OutlineColor = Color3.fromRGB(255, 255, 255)
-            end
-        end
-    end
-end})
-
-local TeleportTab = Window:CreateTab("Teleports", 4483362458)
-TeleportTab:CreateButton({Name = "TP to Cafe (2 Sea)", Callback = function()
-    pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-385.5, 73, 298.5) end)
-end})
-TeleportTab:CreateButton({Name = "TP to Mansion (3 Sea)", Callback = function()
-    pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-12474, 332, -7552) end)
-end})
-
-local TravelTab = Window:CreateTab("Movement / Fly", 4483362458)
-TravelTab:CreateSlider({Name = "Fly Speed", Range = {50, 300}, Increment = 10, CurrentValue = 150, Callback = function(Value) FlySpeed = Value end})
-TravelTab:CreateToggle({Name = "Toggle Flight", CurrentValue = false, Callback = function(Value)
-    IsFlying = Value
+createToggle("Toggle Flight", function(v)
+    IsFlying = v
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
     local hrp = char.HumanoidRootPart
@@ -228,13 +269,58 @@ TravelTab:CreateToggle({Name = "Toggle Flight", CurrentValue = false, Callback =
         if FlyBodyVel then FlyBodyVel:Destroy() end
         if FlyBodyGyro then FlyBodyGyro:Destroy() end
     end
-end})
+end)
 RunService.RenderStepped:Connect(function()
     if IsFlying and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local hrp = LocalPlayer.Character.HumanoidRootPart
         local cam = workspace.CurrentCamera
         FlyBodyGyro.CFrame = cam.CFrame
         FlyBodyVel.Velocity = cam.CFrame.LookVector * FlySpeed
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.3) do
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local char = p.Character
+                local hrp = char.HumanoidRootPart
+                local billboard = char:FindFirstChild("ZenithESPBillboard")
+                local highlight = char:FindFirstChild("ZenithESPHighlight")
+                
+                if ESPEnabled then
+                    if not highlight then
+                        highlight = Instance.new("Highlight", char)
+                        highlight.Name = "ZenithESPHighlight"
+                        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    end
+                    if not billboard then
+                        billboard = Instance.new("BillboardGui", char)
+                        billboard.Name = "ZenithESPBillboard"
+                        billboard.Size = UDim2.new(0, 200, 0, 50)
+                        billboard.StudsOffset = Vector3.new(0, 3, 0)
+                        billboard.AlwaysOnTop = true
+                        
+                        local textLabel = Instance.new("TextLabel", billboard)
+                        textLabel.Size = UDim2.new(1, 0, 1, 0)
+                        textLabel.BackgroundTransparency = 1
+                        textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        textLabel.TextStrokeTransparency = 0
+                        textLabel.TextSize = 14
+                        textLabel.Font = Enum.Font.SourceSansBold
+                    end
+                    
+                    if billboard and billboard:FindFirstChild("TextLabel") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        local dist = math.floor((LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
+                        billboard.TextLabel.Text = p.Name .. "\n[" .. dist .. " studs]"
+                    end
+                else
+                    if highlight then highlight:Destroy() end
+                    if billboard then billboard:Destroy() end
+                end
+            end
+        end
     end
 end)
 
@@ -348,16 +434,4 @@ task.spawn(function()
             end)
         end
     end
-end)
-
-Players.PlayerAdded:Connect(function(p)
-    p.CharacterAdded:Connect(function(char)
-        if ESPEnabled then
-            task.wait(1)
-            local bg = Instance.new("Highlight", char)
-            bg.Name = "ZenithESP"
-            bg.FillColor = Color3.fromRGB(255, 0, 0)
-            bg.OutlineColor = Color3.fromRGB(255, 255, 255)
-        end
-    end)
 end)
