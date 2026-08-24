@@ -1,12 +1,13 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Zenith-Utility V1.0 | Blox Fruits",
-   LoadingTitle = "Zenith-Utility V1.0",
+   Name = "Zenith-Utility V1.1 | Blox Fruits",
+   LoadingTitle = "Zenith-Utility V1.1",
+   LoadingSubtitle = "by Artem",
    ConfigurationSaving = { Enabled = false },
    KeySystem = true,
    KeySettings = {
-      Title = "Zenith-Utility V1.0 Auth",
+      Title = "Zenith-Utility V1.1 Auth",
       Subtitle = "Введите ключ доступа",
       Note = "Введите ключ: Eclipse",
       FileName = "ZenithUtilityKeySave",
@@ -32,21 +33,19 @@ local KillAura = false
 local MobAuraRadius = 50
 local AutoCollectFruits = false
 local AutoCollectChests = false
+local ESPEnabled = false
 local FlyBodyVel, FlyBodyGyro
 
 local function tweenTo(targetCFrame, customSpeed)
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-    
     local hrp = char.HumanoidRootPart
     local speed = customSpeed or FlySpeed
     local distance = (hrp.Position - targetCFrame.Position).Magnitude
     local time = distance / speed
-
     for _, part in pairs(char:GetChildren()) do
         if part:IsA("BasePart") then part.CanCollide = false end
     end
-
     local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
     tween:Play()
@@ -62,13 +61,9 @@ end
 
 local function getCurrentSea()
     local placeId = game.PlaceId
-    if placeId == 2753915549 then
-        return 1
-    elseif placeId == 4442272183 then
-        return 2
-    elseif placeId == 7449423635 then
-        return 3
-    end
+    if placeId == 2753915549 then return 1
+    elseif placeId == 4442272183 then return 2
+    elseif placeId == 7449423635 then return 3 end
     local data = LocalPlayer:FindFirstChild("Data")
     if data and data:FindFirstChild("Level") then
         local lvl = data.Level.Value
@@ -90,7 +85,8 @@ local QuestsAllSeas = {
         {Min = 75, Max = 89, QuestName = "DesertQuest", LevelReq = 2},
         {Min = 90, Max = 99, QuestName = "SnowQuest", LevelReq = 1},
         {Min = 100, Max = 119, QuestName = "SnowQuest", LevelReq = 2},
-        {Min = 120, Max = 149, QuestName = "MarineQuest", LevelReq = 1},
+        {Min = 120, Max = 129, QuestName = "MarineQuest", LevelReq = 1},
+        {Min = 130, Max = 149, QuestName = "MarineQuest", LevelReq = 2},
         {Min = 150, Max = 174, QuestName = "ImpelQuest", LevelReq = 1},
         {Min = 175, Max = 189, QuestName = "ImpelQuest", LevelReq = 2},
         {Min = 190, Max = 209, QuestName = "SkyQuest", LevelReq = 1},
@@ -150,14 +146,11 @@ local function getBestQuestForPlayer()
     local currentSea = getCurrentSea()
     local seaTable = QuestsAllSeas[currentSea]
     if not seaTable then return nil end
-
     local data = LocalPlayer:FindFirstChild("Data")
     if data and data:FindFirstChild("Level") then
         local lvl = data.Level.Value
         for _, q in ipairs(seaTable) do
-            if lvl >= q.Min and lvl <= q.Max then
-                return q
-            end
+            if lvl >= q.Min and lvl <= q.Max then return q end
         end
     end
     return nil
@@ -167,16 +160,12 @@ local function getClosestEnemy()
     local closest, dist = nil, math.huge
     local enemies = workspace:FindFirstChild("Enemies")
     if not enemies then return nil end
-
     for _, enemy in pairs(enemies:GetChildren()) do
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
         local hum = enemy:FindFirstChild("Humanoid")
         if hrp and hum and hum.Health > 0 then
             local d = (LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
-            if d < dist then
-                dist = d
-                closest = enemy
-            end
+            if d < dist then dist = d closest = enemy end
         end
     end
     return closest
@@ -193,7 +182,31 @@ ItemTab:CreateToggle({Name = "Auto Collect Fruits", CurrentValue = false, Callba
 ItemTab:CreateToggle({Name = "Auto Collect Chests", CurrentValue = false, Callback = function(Value) AutoCollectChests = Value end})
 
 local QuestTab = Window:CreateTab("Quests", 4483362458)
-QuestTab:CreateToggle({Name = "Auto Accept Quest (By Level & Sea)", CurrentValue = false, Callback = function(Value) AutoQuest = Value end})
+QuestTab:CreateToggle({Name = "Auto Accept Quest (Fixed)", CurrentValue = false, Callback = function(Value) AutoQuest = Value end})
+
+local ESPTab = Window:CreateTab("ESP", 4483362458)
+ESPTab:CreateToggle({Name = "Player & Fruit ESP", CurrentValue = false, Callback = function(Value)
+    ESPEnabled = Value
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            if p.Character:FindFirstChild("ZenithESP") then p.Character.ZenithESP:Destroy() end
+            if ESPEnabled then
+                local bg = Instance.new("Highlight", p.Character)
+                bg.Name = "ZenithESP"
+                bg.FillColor = Color3.fromRGB(255, 0, 0)
+                bg.OutlineColor = Color3.fromRGB(255, 255, 255)
+            end
+        end
+    end
+end})
+
+local TeleportTab = Window:CreateTab("Teleports", 4483362458)
+TeleportTab:CreateButton({Name = "TP to Cafe (2 Sea)", Callback = function()
+    pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-385.5, 73, 298.5) end)
+end})
+TeleportTab:CreateButton({Name = "TP to Mansion (3 Sea)", Callback = function()
+    pcall(function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-12474, 332, -7552) end)
+end})
 
 local TravelTab = Window:CreateTab("Movement / Fly", 4483362458)
 TravelTab:CreateSlider({Name = "Fly Speed", Range = {50, 300}, Increment = 10, CurrentValue = 150, Callback = function(Value) FlySpeed = Value end})
@@ -216,8 +229,6 @@ TravelTab:CreateToggle({Name = "Toggle Flight", CurrentValue = false, Callback =
         if FlyBodyGyro then FlyBodyGyro:Destroy() end
     end
 end})
-TravelTab:CreateButton({Name = "Tween to Sea 2 NPC", Callback = function() pcall(function() ReplicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa") end) end})
-TravelTab:CreateButton({Name = "Tween to Sea 3 NPC", Callback = function() pcall(function() ReplicatedStorage.Remotes.CommF_:InvokeServer("TravelZou") end) end})
 RunService.RenderStepped:Connect(function()
     if IsFlying and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local hrp = LocalPlayer.Character.HumanoidRootPart
@@ -337,4 +348,16 @@ task.spawn(function()
             end)
         end
     end
+end)
+
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function(char)
+        if ESPEnabled then
+            task.wait(1)
+            local bg = Instance.new("Highlight", char)
+            bg.Name = "ZenithESP"
+            bg.FillColor = Color3.fromRGB(255, 0, 0)
+            bg.OutlineColor = Color3.fromRGB(255, 255, 255)
+        end
+    end)
 end)
