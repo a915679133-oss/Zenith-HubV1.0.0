@@ -484,7 +484,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ESP цикл
 task.spawn(function()
     while task.wait(0.3) do
         for _, p in pairs(Players:GetPlayers()) do
@@ -563,12 +562,14 @@ task.spawn(function()
     end
 end)
 
--- Авто фарм квестов и позиционирование
+local isTravellingToIsland = false
+
 task.spawn(function()
-    while task.wait(0.1) do
+    while task.wait(0.05) do
         if AutoFarm then
             pcall(function()
                 equipSelectedWeapon()
+                
                 local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
                 if playerGui then
                     local mainGui = playerGui:FindFirstChild("Main")
@@ -582,29 +583,54 @@ task.spawn(function()
                 end
                 
                 local enemy = getClosestQuestEnemy()
-                if enemy and enemy:FindFirstChild("HumanoidRootPart") then
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                local char = LocalPlayer.Character
+                
+                if enemy and enemy:FindFirstChild("HumanoidRootPart") and char and char:FindFirstChild("HumanoidRootPart") then
+                    local hrp = char.HumanoidRootPart
+                    local enemyHrp = enemy.HumanoidRootPart
+                    local distance = (hrp.Position - enemyHrp.Position).Magnitude
+                    
+                    if distance > 350 then
+                        if not isTravellingToIsland then
+                            isTravellingToIsland = true
+                            local tween = tweenTo(enemyHrp.CFrame * CFrame.new(0, 30, 0), 250)
+                            if tween then
+                                tween.Completed:Wait()
+                            end
+                            isTravellingToIsland = false
+                        end
+                    else
+                        isTravellingToIsland = false
+                        hrp.CFrame = enemyHrp.CFrame * CFrame.new(0, 7, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                    end
                 end
             end)
         end
     end
 end)
 
--- Цикл атаки кликами
 task.spawn(function()
-    while task.wait(0.05) do
-        if KillAura or AutoFarm or MobAura then
+    while task.wait(0.02) do
+        if AutoFarm or KillAura or MobAura then
             pcall(function()
                 equipSelectedWeapon()
+                
+                local char = LocalPlayer.Character
+                if char then
+                    local tool = char:FindFirstChildOfClass("Tool")
+                    if tool then
+                        tool:Activate()
+                    end
+                end
+                
                 VirtualUser:Button1Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-                task.wait(0.02)
+                task.wait(0.01)
                 VirtualUser:Button1Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
             end)
         end
     end
 end)
 
--- Моб Аура
 task.spawn(function()
     while task.wait(0.2) do
         if MobAura then
@@ -634,7 +660,6 @@ task.spawn(function()
     end
 end)
 
--- Авто-сбор фруктов
 task.spawn(function()
     while task.wait(1) do
         if AutoCollectFruits then
@@ -675,7 +700,6 @@ task.spawn(function()
     end
 end)
 
--- Авто-сбор сундуков
 task.spawn(function()
     while task.wait(0.5) do
         if AutoCollectChests then
