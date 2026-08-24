@@ -3,7 +3,6 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
    Name = "Zenith-Utility V1.0 | Blox Fruits",
    LoadingTitle = "Zenith-Utility V1.0",
-   LoadingSubtitle = "by Artem",
    ConfigurationSaving = { Enabled = false },
    KeySystem = true,
    KeySettings = {
