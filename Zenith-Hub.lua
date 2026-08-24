@@ -1,8 +1,9 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local VirtualUser = game:GetService("VirtualUser")
 local LocalPlayer = Players.LocalPlayer
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -10,41 +11,136 @@ ScreenGui.Name = "ZenithUtilityUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+local ToggleMenuBtn = Instance.new("ImageButton")
+ToggleMenuBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleMenuBtn.Position = UDim2.new(0, 20, 0.5, -25)
+ToggleMenuBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+ToggleMenuBtn.BorderSizePixel = 0
+ToggleMenuBtn.Draggable = true
+ToggleMenuBtn.Parent = ScreenGui
+
+local BtnCorner = Instance.new("UICorner", ToggleMenuBtn)
+BtnCorner.CornerRadius = UDim.new(0, 12)
+
+local BtnIcon = Instance.new("TextLabel")
+BtnIcon.Size = UDim2.new(1, 0, 1, 0)
+BtnIcon.BackgroundTransparency = 1
+BtnIcon.Text = "🛡️"
+BtnIcon.TextSize = 24
+BtnIcon.Parent = ToggleMenuBtn
+
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 480, 0, 360)
-MainFrame.Position = UDim2.new(0.5, -240, 0.5, -180)
+MainFrame.Size = UDim2.new(0, 520, 0, 380)
+MainFrame.Position = UDim2.new(0.5, -260, 0.5, -190)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
 
-local UICorner = Instance.new("UICorner", MainFrame)
-UICorner.CornerRadius = UDim.new(0, 8)
+ToggleMenuBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+local MainCorner = Instance.new("UICorner", MainFrame)
+MainCorner.CornerRadius = UDim.new(0, 8)
 
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, 0, 0, 40)
+TitleLabel.Size = UDim2.new(1, -120, 0, 40)
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = " Zenith-Utility V2.0 | Blox Fruits"
+TitleLabel.Text = "Zenith-Utility V3.0 | Blox Fruits"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 18
+TitleLabel.TextSize = 16
 TitleLabel.Font = Enum.Font.SourceSansBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Parent = MainFrame
 
-local ContentFrame = Instance.new("ScrollingFrame")
-ContentFrame.Size = UDim2.new(1, -20, 1, -60)
-ContentFrame.Position = UDim2.new(0, 10, 0, 50)
-ContentFrame.BackgroundTransparency = 1
-ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
-ContentFrame.ScrollBarThickness = 6
-ContentFrame.Parent = MainFrame
+local CoordsLabel = Instance.new("TextLabel")
+CoordsLabel.Size = UDim2.new(0, 150, 0, 40)
+CoordsLabel.Position = UDim2.new(1, -160, 0, 0)
+CoordsLabel.BackgroundTransparency = 1
+CoordsLabel.Text = "Pos: 0, 0, 0"
+CoordsLabel.TextColor3 = Color3.fromRGB(0, 255, 120)
+CoordsLabel.TextSize = 12
+CoordsLabel.Font = Enum.Font.SourceSansBold
+CoordsLabel.TextXAlignment = Enum.TextXAlignment.Right
+CoordsLabel.Parent = MainFrame
 
-local UIListLayout = Instance.new("UIListLayout", ContentFrame)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 8)
+local TabButtonContainer = Instance.new("Frame")
+TabButtonContainer.Size = UDim2.new(1, -20, 0, 30)
+TabButtonContainer.Position = UDim2.new(0, 10, 0, 45)
+TabButtonContainer.BackgroundTransparency = 1
+TabButtonContainer.Parent = MainFrame
 
-local function createToggle(name, callback)
+local UIListTabLayout = Instance.new("UIListLayout", TabButtonContainer)
+UIListTabLayout.FillDirection = Enum.FillDirection.Horizontal
+UIListTabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListTabLayout.Padding = UDim.new(0, 5)
+
+local TabsContent = {}
+local CurrentActiveTab = nil
+
+local function createTab(name)
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Size = UDim2.new(0, 95, 1, 0)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    tabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tabBtn.TextSize = 13
+    tabBtn.Font = Enum.Font.SourceSansBold
+    tabBtn.Text = name
+    tabBtn.Parent = TabButtonContainer
+    
+    local c = Instance.new("UICorner", tabBtn)
+    c.CornerRadius = UDim.new(0, 6)
+    
+    local ContentFrame = Instance.new("ScrollingFrame")
+    ContentFrame.Size = UDim2.new(1, -20, 1, -90)
+    ContentFrame.Position = UDim2.new(0, 10, 0, 85)
+    ContentFrame.BackgroundTransparency = 1
+    ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
+    ContentFrame.ScrollBarThickness = 6
+    ContentFrame.Visible = false
+    ContentFrame.Parent = MainFrame
+    
+    local UIListLayout = Instance.new("UIListLayout", ContentFrame)
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 8)
+    
+    TabsContent[name] = ContentFrame
+    
+    if not CurrentActiveTab then
+        CurrentActiveTab = ContentFrame
+        ContentFrame.Visible = true
+        tabBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+        tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+    
+    tabBtn.MouseButton1Click:Connect(function()
+        for _, frame in pairs(TabsContent) do
+            frame.Visible = false
+        end
+        for _, btn in pairs(TabButtonContainer:GetChildren()) do
+            if btn:IsA("TextButton") then
+                btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+                btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+            end
+        end
+        ContentFrame.Visible = true
+        tabBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+        tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    
+    return ContentFrame
+end
+
+local TabFarm = createTab("Farm")
+local TabItems = createTab("Items")
+local TabTeleports = createTab("Teleports")
+local TabESP = createTab("ESP & Fly")
+
+local function createToggle(tab, name, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 35)
     btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
@@ -52,7 +148,7 @@ local function createToggle(name, callback)
     btn.TextSize = 14
     btn.Font = Enum.Font.SourceSans
     btn.Text = name .. ": OFF"
-    btn.Parent = ContentFrame
+    btn.Parent = tab
     
     local c = Instance.new("UICorner", btn)
     c.CornerRadius = UDim.new(0, 6)
@@ -66,7 +162,7 @@ local function createToggle(name, callback)
     end)
 end
 
-local function createButton(name, callback)
+local function createButton(tab, name, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 35)
     btn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
@@ -74,7 +170,7 @@ local function createButton(name, callback)
     btn.TextSize = 14
     btn.Font = Enum.Font.SourceSans
     btn.Text = name
-    btn.Parent = ContentFrame
+    btn.Parent = tab
     
     local c = Instance.new("UICorner", btn)
     c.CornerRadius = UDim.new(0, 6)
@@ -104,6 +200,16 @@ task.spawn(function()
             end
         end)
     end
+end)
+
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local pos = char.HumanoidRootPart.Position
+            CoordsLabel.Text = string.Format("Pos: %.0f, %.0f, %.0f", pos.X, pos.Y, pos.Z)
+        end
+    end)
 end)
 
 local function tweenTo(targetCFrame, customSpeed)
@@ -235,23 +341,23 @@ local function getClosestEnemy()
     return closest
 end
 
-createToggle("Auto Farm", function(v) AutoFarm = v end)
-createToggle("Mob Aura", function(v) MobAura = v end)
-createToggle("Kill Aura", function(v) KillAura = v end)
-createToggle("Auto Collect Fruits", function(v) AutoCollectFruits = v end)
-createToggle("Auto Collect Chests", function(v) AutoCollectChests = v end)
-createToggle("Auto Quest", function(v) AutoQuest = v end)
-createToggle("ESP (Players & Fruits)", function(v) ESPEnabled = v end)
+createToggle(TabFarm, "Auto Farm", function(v) AutoFarm = v end)
+createToggle(TabFarm, "Mob Aura", function(v) MobAura = v end)
+createToggle(TabFarm, "Kill Aura", function(v) KillAura = v end)
+createToggle(TabFarm, "Auto Quest", function(v) AutoQuest = v end)
 
-createButton("TP to Cafe (2 Sea)", function()
+createToggle(TabItems, "Auto Collect Fruits", function(v) AutoCollectFruits = v end)
+createToggle(TabItems, "Auto Collect Chests", function(v) AutoCollectChests = v end)
+
+createButton(TabTeleports, "TP to Cafe (2 Sea)", function()
     tweenTo(CFrame.new(-385.5, 73, 298.5), 300)
 end)
-
-createButton("TP to Mansion (3 Sea)", function()
+createButton(TabTeleports, "TP to Mansion (3 Sea)", function()
     tweenTo(CFrame.new(-12474, 332, -7552), 300)
 end)
 
-createToggle("Toggle Flight", function(v)
+createToggle(TabESP, "ESP (Players & Fruits)", function(v) ESPEnabled = v end)
+createToggle(TabESP, "Toggle Flight", function(v)
     IsFlying = v
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
@@ -328,6 +434,18 @@ task.spawn(function()
     while task.wait(0.1) do
         if AutoFarm then
             pcall(function()
+                local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+                if playerGui then
+                    local mainGui = playerGui:FindFirstChild("Main")
+                    local activeQuest = mainGui and mainGui:FindFirstChild("Quest") and mainGui.Quest.Visible
+                    if not activeQuest and AutoQuest then
+                        local bestQuest = getBestQuestForPlayer()
+                        if bestQuest then
+                            acceptQuest(bestQuest.QuestName, bestQuest.LevelReq)
+                        end
+                    end
+                end
+                
                 local enemy = getClosestEnemy()
                 if enemy and enemy:FindFirstChild("HumanoidRootPart") then
                     LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0) * CFrame.Angles(math.rad(-90), 0, 0)
@@ -384,8 +502,16 @@ task.spawn(function()
                         if handle then
                             local char = LocalPlayer.Character
                             if char and char:FindFirstChild("HumanoidRootPart") then
-                                char.HumanoidRootPart.CFrame = handle.CFrame
+                                local hrp = char.HumanoidRootPart
+                                local savedPos = hrp.CFrame
+                                
+                                task.spawn(function()
+                                    task.wait(1.5)
+                                end)
+                                
+                                hrp.CFrame = handle.CFrame
                                 task.wait(0.5)
+                                hrp.CFrame = savedPos
                             end
                         end
                     end
@@ -408,26 +534,6 @@ task.spawn(function()
                                 char.HumanoidRootPart.CFrame = chestPart.CFrame
                                 task.wait(0.3)
                             end
-                        end
-                    end
-                end
-            end)
-        end
-    end
-end)
-
-task.spawn(function()
-    while task.wait(5) do
-        if AutoQuest then
-            pcall(function()
-                local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
-                if playerGui then
-                    local mainGui = playerGui:FindFirstChild("Main")
-                    local activeQuest = mainGui and mainGui:FindFirstChild("Quest") and mainGui.Quest.Visible
-                    if not activeQuest then
-                        local bestQuest = getBestQuestForPlayer()
-                        if bestQuest then
-                            acceptQuest(bestQuest.QuestName, bestQuest.LevelReq)
                         end
                     end
                 end
