@@ -50,7 +50,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -120, 0, 40)
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "Zenith-Utility V3.5 | Blox Fruits"
+TitleLabel.Text = "Zenith-Utility V1.3 | Blox Fruits"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 16
 TitleLabel.Font = Enum.Font.SourceSansBold
@@ -395,6 +395,7 @@ end)
 
 task.spawn(function()
     while task.wait(0.3) do
+        -- ESP для игроков
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 local char = p.Character
@@ -432,6 +433,40 @@ task.spawn(function()
                 else
                     if highlight then highlight:Destroy() end
                     if billboard then billboard:Destroy() end
+                end
+            end
+        end
+
+        -- ESP для фруктов с отображением названия
+        for _, obj in pairs(workspace:GetChildren()) do
+            if string.find(obj.Name, "Fruit") and (obj:IsA("Tool") or obj:IsA("Model")) then
+                local handle = obj:FindFirstChild("Handle") or obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+                if handle then
+                    local billboard = obj:FindFirstChild("ZenithFruitESP")
+                    if ESPEnabled then
+                        if not billboard then
+                            billboard = Instance.new("BillboardGui", obj)
+                            billboard.Name = "ZenithFruitESP"
+                            billboard.Size = UDim2.new(0, 200, 0, 50)
+                            billboard.StudsOffset = Vector3.new(0, 2, 0)
+                            billboard.AlwaysOnTop = true
+                            
+                            local textLabel = Instance.new("TextLabel", billboard)
+                            textLabel.Size = UDim2.new(1, 0, 1, 0)
+                            textLabel.BackgroundTransparency = 1
+                            textLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
+                            textLabel.TextStrokeTransparency = 0
+                            textLabel.TextSize = 14
+                            textLabel.Font = Enum.Font.SourceSansBold
+                        end
+                        
+                        if billboard and billboard:FindFirstChild("TextLabel") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                            local dist = math.floor((LocalPlayer.Character.HumanoidRootPart.Position - handle.Position).Magnitude)
+                            billboard.TextLabel.Text = "🍎 " .. obj.Name .. "\n[" .. dist .. " studs]"
+                        end
+                    else
+                        if billboard then billboard:Destroy() end
+                    end
                 end
             end
         end
@@ -516,14 +551,27 @@ task.spawn(function()
                                 local hrp = char.HumanoidRootPart
                                 local savedPos = hrp.CFrame
                                 
+                                -- Телепортируемся к фрукту
                                 hrp.CFrame = handle.CFrame
-                                task.wait(0.2) -- задержка, чтобы игра засчитала подбор
-                                hrp.CFrame = savedPos
                                 
-                                task.spawn(function()
-                                    task.wait(1.5)
-                                    savedPos = nil
-                                end)
+                                -- Ждем, пока фрукт реально исчезнет с карты
+                                local timeout = 0
+                                while obj and obj.Parent == workspace and timeout < 30 do
+                                    task.wait(0.1)
+                                    timeout = timeout + 1
+                                    if handle and hrp then
+                                        hrp.CFrame = handle.CFrame
+                                    end
+                                end
+                                
+                                -- Возвращаемся назад после подбора
+                                if savedPos then
+                                    hrp.CFrame = savedPos
+                                    task.spawn(function()
+                                        task.wait(1.5)
+                                        savedPos = nil
+                                    end)
+                                end
                             end
                         end
                     end
